@@ -5,6 +5,8 @@ import express from 'express';
 import { config, ROOT, origensPermitidas, validarConfig } from './config.js';
 import {
   aplicarSchemaSqlite,
+  abrirSqlite,
+  poolMySql,
   listarApps,
   listarAppsPorModo,
   buscarAppPorModo,
@@ -92,6 +94,64 @@ app.get('/api/atividade', async (req, res, next) => {
 
 app.get('/api/mysql/status', async (req, res) => {
   res.json(await testarMySql());
+});
+
+/**
+ * Estado das duas conexões de banco, para o painel de conexões.
+ * O teste do MariaDB atravessa a internet, então é o que pode demorar.
+ */
+app.get('/api/conexoes', async (req, res) => {
+  const inicio = Date.now();
+
+  // SQLite — local, responde em microssegundos
+  let sqlite;
+  try {
+    const db = abrirSqlite();
+    const { total } = db.prepare('SELECT COUNT(*) AS total FROM apps').get();
+    const tabelas = db
+      .prepare(`SELECT COUNT(*) AS n FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`)
+      .get().n;
+    sqlite = {
+      ok: true,
+      tipo: 'SQLite',
+      papel: 'fonte da verdade local',
+      caminho: config.sqlite.caminho,
+      tabelas,
+      apps: total,
+      latenciaMs: Date.now() - inicio,
+    };
+  } catch (erro) {
+    sqlite = { ok: false, tipo: 'SQLite', erro: erro.message };
+  }
+
+  // MariaDB — remoto
+  const t0 = Date.now();
+  const teste = await testarMySql();
+  let mysql = {
+    ok: teste.ok,
+    tipo: 'MariaDB',
+    papel: 'produção / site público',
+    host: config.mysql.host || null,
+    banco: config.mysql.banco || null,
+    mensagem: teste.mensagem,
+    latenciaMs: Date.now() - t0,
+  };
+
+  if (teste.ok) {
+    try {
+      const pool = poolMySql();
+      const [[{ total }]] = await pool.query('SELECT COUNT(*) AS total FROM apps');
+      mysql.apps = total;
+    } catch {
+      // contagem é acessório; a conexão já foi validada acima
+    }
+  }
+
+  // Os dois catálogos batem?
+  const sincronizado =
+    sqlite.ok && mysql.ok && mysql.apps !== undefined ? sqlite.apps === mysql.apps : null;
+
+  res.json({ modo: config.modo, sqlite, mysql, sincronizado });
 });
 
 // ------------------------------------------------------------
