@@ -212,7 +212,7 @@ function renderizarMensagens() {
       <p>Pergunte sobre seus apps ou use comandos como <code>listar apps</code>, <code>status mestre-do-pc</code> ou <code>ajuda</code>.</p>
     </div>`;
   }
-  return chat.mensagens
+  let html = chat.mensagens
     .map(
       (m) => `
     <div class="vd-chat__msg vd-chat__msg--${m.papel}">
@@ -223,6 +223,22 @@ function renderizarMensagens() {
     </div>`
     )
     .join('');
+
+  if (chat.enviando) {
+    html += `
+    <div class="vd-chat__msg vd-chat__msg--assistant">
+      <div class="vd-chat__bubble vd-chat__bubble--typing">
+        <div class="vd-chat__meta">Agente</div>
+        <div class="vd-chat__typing"><span></span><span></span><span></span></div>
+      </div>
+    </div>`;
+  }
+  return html;
+}
+
+function limparChat() {
+  chat.mensagens = [];
+  renderizarTelaAgente();
 }
 
 function telaAgente() {
@@ -241,6 +257,7 @@ function telaAgente() {
           <select id="chat-modelo" class="vd-chat__select" title="Modelo Ollama">
             ${opcoesModelos}
           </select>
+          <button type="button" id="chat-limpar" class="vd-btn vd-btn--sm vd-btn--secondary" title="Limpar conversa">🗑</button>
           <span class="vd-chat__badge">Ollama</span>
         </div>
       </div>
@@ -279,17 +296,24 @@ async function enviarMensagem(texto) {
   chat.mensagens.push({ papel: 'user', conteudo: texto.trim(), criado_em: new Date().toISOString() });
   renderizarTelaAgente();
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
+
   try {
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mensagem: texto.trim(), modelo }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     const dados = await res.json();
     if (!res.ok) throw new Error(dados.erro || 'Erro no servidor');
     chat.mensagens.push({ papel: 'assistant', conteudo: dados.resposta, criado_em: new Date().toISOString() });
   } catch (erro) {
-    chat.mensagens.push({ papel: 'assistant', conteudo: `Erro: ${erro.message}`, criado_em: new Date().toISOString() });
+    clearTimeout(timeoutId);
+    const msg = erro.name === 'AbortError' ? 'Tempo limite esgotado (2 min). Tente outro modelo ou verifique a conexão com o Ollama.' : erro.message;
+    chat.mensagens.push({ papel: 'assistant', conteudo: `Erro: ${msg}`, criado_em: new Date().toISOString() });
   } finally {
     chat.enviando = false;
     renderizarTelaAgente();
@@ -419,6 +443,14 @@ document.addEventListener('change', (ev) => {
   if (ev.target?.id === 'chat-modelo') {
     chat.modelo = ev.target.value;
     localStorage.setItem('vd_ollama_modelo', chat.modelo);
+  }
+});
+
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('#chat-limpar');
+  if (btn) {
+    ev.preventDefault();
+    limparChat();
   }
 });
 
