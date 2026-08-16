@@ -94,9 +94,10 @@ verifique conflito antes.
 - Antes de qualquer push, varra o que está staged:
 
 ```powershell
-foreach ($p in @('u786088869','auth-db1659','82\.112\.247\.163','65002')) {
-  git grep --cached -n -E $p -- ':!*.pdf'
-}
+# Monte a lista a partir do seu .env — não escreva os valores aqui.
+$alvos = (Get-Content .env) -match '^(DB_HOST|DB_USER|DB_NAME|SSH_HOST|SSH_PORT)=' |
+         ForEach-Object { ($_ -split '=', 2)[1].Trim() } | Where-Object { $_ }
+foreach ($p in $alvos) { git grep --cached -n -F $p -- ':!*.pdf' }
 ```
 
 - A chave SSH de deploy fica em `.keys/` (git-ignorado). No Windows, o SSH a
