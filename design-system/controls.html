@@ -1,0 +1,164 @@
+<!-- @dsCard group="Componentes" name="Controles" subtitle="Botões, confirmação destrutiva, campos e alertas" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Controles — Vitrine de Apps</title>
+<style>
+:root{--vd-bg:#16181d;--vd-surface:#1e2128;--vd-surface-hover:#262a33;--vd-surface-sunken:#121419;--vd-border:#2f343d;--vd-border-strong:#3d434e;--vd-text:#e6e8ec;--vd-text-muted:#9aa1ad;--vd-text-faint:#6b7280;--vd-accent:#cc785c;--vd-accent-hover:#d98a70;--vd-online:#4ade80;--vd-warning:#fbbf24;--vd-error:#f87171;--vd-font:'Segoe UI',system-ui,sans-serif;--vd-font-mono:'Cascadia Code',Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--vd-bg);color:var(--vd-text);font-family:var(--vd-font);padding:32px;font-size:14px}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--vd-text-muted);margin:32px 0 14px;font-weight:600}
+h2:first-of-type{margin-top:0}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.note{font-size:12px;color:var(--vd-text-faint);margin:10px 0 0;max-width:620px;line-height:1.6}
+code{font-family:var(--vd-font-mono);font-size:11px;background:#121419;padding:2px 6px;border-radius:4px;color:#cc785c}
+
+/* ================= Botões ================= */
+.vd-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-family:inherit;font-size:13px;font-weight:500;line-height:1;
+  padding:8px 15px;border-radius:7px;border:1px solid transparent;
+  cursor:pointer;transition:background 140ms ease,border-color 140ms ease,color 140ms ease;
+  white-space:nowrap;
+}
+.vd-btn:focus-visible{outline:2px solid var(--vd-accent);outline-offset:2px}
+
+.vd-btn--primary{background:var(--vd-accent);color:#16181d;font-weight:600}
+.vd-btn--primary:hover{background:var(--vd-accent-hover)}
+
+.vd-btn--secondary{background:var(--vd-surface);color:var(--vd-text);border-color:var(--vd-border-strong)}
+.vd-btn--secondary:hover{background:var(--vd-surface-hover)}
+
+.vd-btn--ghost{background:transparent;color:var(--vd-text-muted)}
+.vd-btn--ghost:hover{background:var(--vd-surface);color:var(--vd-text)}
+
+.vd-btn--start{background:rgba(74,222,128,.13);color:var(--vd-online);border-color:rgba(74,222,128,.28)}
+.vd-btn--start:hover{background:rgba(74,222,128,.2)}
+
+.vd-btn--stop{background:rgba(248,113,113,.13);color:var(--vd-error);border-color:rgba(248,113,113,.28)}
+.vd-btn--stop:hover{background:rgba(248,113,113,.2)}
+
+.vd-btn--sm{padding:5px 11px;font-size:12px;border-radius:6px;gap:5px}
+.vd-btn--icon{padding:7px;width:32px;height:32px}
+
+.vd-btn[disabled],.vd-btn--disabled{opacity:.42;cursor:not-allowed;pointer-events:none}
+
+.vd-btn--loading{position:relative;color:transparent!important;pointer-events:none}
+.vd-btn--loading::after{
+  content:'';position:absolute;width:13px;height:13px;border-radius:50%;
+  border:2px solid currentColor;border-top-color:transparent;
+  animation:vd-spin .6s linear infinite;color:#16181d;
+}
+.vd-btn--start.vd-btn--loading::after{color:#4ade80}
+@keyframes vd-spin{to{transform:rotate(360deg)}}
+
+/* ================= Confirmação destrutiva ================= */
+.vd-confirm{
+  background:var(--vd-surface);border:1px solid rgba(248,113,113,.3);
+  border-radius:10px;padding:17px;max-width:400px;
+}
+.vd-confirm__title{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;margin:0 0 8px}
+.vd-confirm__icon{width:26px;height:26px;border-radius:7px;background:rgba(248,113,113,.14);
+  display:grid;place-items:center;font-size:14px;flex-shrink:0}
+.vd-confirm__body{font-size:13px;color:var(--vd-text-muted);line-height:1.55;margin:0 0 15px}
+.vd-confirm__body strong{color:var(--vd-text)}
+.vd-confirm__actions{display:flex;gap:9px;justify-content:flex-end}
+
+/* ================= Campos ================= */
+.vd-field{margin-bottom:15px;max-width:340px}
+.vd-label{display:block;font-size:12px;font-weight:500;color:var(--vd-text-muted);margin-bottom:6px}
+.vd-input{
+  width:100%;background:var(--vd-surface-sunken);border:1px solid var(--vd-border);
+  border-radius:7px;padding:9px 12px;color:var(--vd-text);font-family:inherit;font-size:13.5px;
+  transition:border-color 140ms ease;
+}
+.vd-input::placeholder{color:var(--vd-text-faint)}
+.vd-input:focus{outline:none;border-color:var(--vd-accent)}
+.vd-input--error{border-color:var(--vd-error)}
+.vd-help{font-size:11.5px;color:var(--vd-text-faint);margin:6px 0 0}
+.vd-help--error{color:var(--vd-error)}
+
+/* ================= Alertas ================= */
+.vd-alert{display:flex;gap:11px;padding:12px 14px;border-radius:8px;font-size:13px;line-height:1.55;max-width:560px;margin-bottom:10px}
+.vd-alert__icon{flex-shrink:0;font-size:15px;line-height:1.35}
+.vd-alert__body{flex:1}
+.vd-alert__body strong{display:block;margin-bottom:3px}
+.vd-alert--info{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.24);color:#93c5fd}
+.vd-alert--success{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.24);color:#86efac}
+.vd-alert--warning{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.24);color:#fcd34d}
+.vd-alert--error{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.24);color:#fca5a5}
+</style>
+</head>
+<body>
+
+<h2>Botões — hierarquia</h2>
+<div class="row">
+  <button class="vd-btn vd-btn--primary">Salvar automação</button>
+  <button class="vd-btn vd-btn--secondary">Abrir código</button>
+  <button class="vd-btn vd-btn--ghost">Cancelar</button>
+  <button class="vd-btn vd-btn--secondary" disabled>Desabilitado</button>
+</div>
+
+<h2>Ações de processo</h2>
+<div class="row">
+  <button class="vd-btn vd-btn--start">▶ Iniciar</button>
+  <button class="vd-btn vd-btn--stop">■ Parar</button>
+  <button class="vd-btn vd-btn--secondary">↻ Reiniciar</button>
+  <button class="vd-btn vd-btn--start vd-btn--loading">▶ Iniciar</button>
+</div>
+<div class="row">
+  <button class="vd-btn vd-btn--sm vd-btn--start">▶ Iniciar</button>
+  <button class="vd-btn vd-btn--sm vd-btn--stop">■ Parar</button>
+  <button class="vd-btn vd-btn--sm vd-btn--secondary">Abrir</button>
+  <button class="vd-btn vd-btn--secondary vd-btn--icon">⋯</button>
+</div>
+<p class="note">O botão de iniciar entra em <code>--loading</code> enquanto o processo sobe, e só vira "Parar" quando a porta responde. Sem isso, dá para clicar duas vezes e subir o app duplicado.</p>
+
+<h2>Confirmação destrutiva</h2>
+<div class="vd-confirm">
+  <h3 class="vd-confirm__title"><span class="vd-confirm__icon">⚠</span>Parar o MULT-CHAT-HUB?</h3>
+  <p class="vd-confirm__body">Isso encerra o processo <strong>PID 18432</strong> e toda a árvore de processos filhos. Trabalho não salvo no app será perdido.</p>
+  <div class="vd-confirm__actions">
+    <button class="vd-btn vd-btn--ghost">Cancelar</button>
+    <button class="vd-btn vd-btn--stop">Parar mesmo assim</button>
+  </div>
+</div>
+<p class="note">Toda operação destrutiva (<code>iniciar_app</code>, <code>parar_app</code>) passa por esta confirmação — regra herdada do Mestre do PC V10.</p>
+
+<h2>Campos</h2>
+<div class="vd-field">
+  <label class="vd-label" for="f1">E-mail</label>
+  <input class="vd-input" id="f1" type="email" placeholder="voce@exemplo.com">
+</div>
+<div class="vd-field">
+  <label class="vd-label" for="f2">Senha</label>
+  <input class="vd-input vd-input--error" id="f2" type="password" value="123">
+  <p class="vd-help vd-help--error">A senha precisa ter no mínimo 8 caracteres.</p>
+</div>
+<div class="vd-field">
+  <label class="vd-label" for="f3">Porta do app</label>
+  <input class="vd-input" id="f3" type="text" value="4410">
+  <p class="vd-help">Faixa reservada da Vitrine: 4410–4460.</p>
+</div>
+
+<h2>Alertas</h2>
+<div class="vd-alert vd-alert--success">
+  <span class="vd-alert__icon">✓</span>
+  <div class="vd-alert__body"><strong>BoiControl iniciado</strong>Rodando em localhost:8080 · PID 22104</div>
+</div>
+<div class="vd-alert vd-alert--warning">
+  <span class="vd-alert__icon">⚠</span>
+  <div class="vd-alert__body"><strong>Porta 3000 já está em uso</strong>MULT-CHAT-HUB, Estante e Cruzamento Bovinos disputam essa porta. Escolha outra antes de iniciar.</div>
+</div>
+<div class="vd-alert vd-alert--error">
+  <span class="vd-alert__icon">✕</span>
+  <div class="vd-alert__body"><strong>Estante de Ebooks indisponível</strong>O drive F: não está conectado. Conecte-o e atualize o catálogo.</div>
+</div>
+<div class="vd-alert vd-alert--info">
+  <span class="vd-alert__icon">ℹ</span>
+  <div class="vd-alert__body"><strong>Sincronização concluída</strong>5 apps enviados para o MySQL da Hostinger.</div>
+</div>
+
+</body>
+</html>

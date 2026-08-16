@@ -1,0 +1,76 @@
+/* Vitrine de Apps — tokens do design system
+   Tema escuro tipo painel de controle. Fonte única da verdade das cores,
+   tipografia e espaçamento. Importado por todos os componentes. */
+
+:root {
+  /* ---- Superfícies ---- */
+  --vd-bg: #16181d;           /* fundo da aplicação */
+  --vd-surface: #1e2128;      /* cards, painéis */
+  --vd-surface-hover: #262a33;
+  --vd-surface-sunken: #121419; /* menu lateral, áreas recuadas */
+  --vd-border: #2f343d;
+  --vd-border-strong: #3d434e;
+
+  /* ---- Texto ---- */
+  --vd-text: #e6e8ec;
+  --vd-text-muted: #9aa1ad;
+  --vd-text-faint: #6b7280;
+
+  /* ---- Marca ---- */
+  --vd-accent: #cc785c;
+  --vd-accent-hover: #d98a70;
+  --vd-accent-dim: rgba(204, 120, 92, 0.14);
+
+  /* ---- Estado ---- */
+  --vd-online: #4ade80;
+  --vd-online-dim: rgba(74, 222, 128, 0.14);
+  --vd-offline: #6b7280;
+  --vd-offline-dim: rgba(107, 114, 128, 0.14);
+  --vd-warning: #fbbf24;
+  --vd-warning-dim: rgba(251, 191, 36, 0.14);
+  --vd-error: #f87171;
+  --vd-error-dim: rgba(248, 113, 113, 0.14);
+
+  /* ---- Cor de identidade de cada app ---- */
+  --vd-app-multichat: #8b5cf6;
+  --vd-app-estante: #f59e0b;
+  --vd-app-bovinos: #10b981;
+  --vd-app-mestrepc: #3b82f6;
+  --vd-app-boicontrol: #ef4444;
+
+  /* ---- Tipografia ---- */
+  --vd-font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --vd-font-mono: 'Cascadia Code', Consolas, 'SF Mono', monospace;
+  --vd-text-xs: 11px;
+  --vd-text-sm: 13px;
+  --vd-text-base: 14px;
+  --vd-text-lg: 16px;
+  --vd-text-xl: 20px;
+  --vd-text-2xl: 26px;
+  --vd-leading: 1.55;
+
+  /* ---- Espaçamento (escala de 4) ---- */
+  --vd-space-1: 4px;
+  --vd-space-2: 8px;
+  --vd-space-3: 12px;
+  --vd-space-4: 16px;
+  --vd-space-5: 20px;
+  --vd-space-6: 24px;
+  --vd-space-8: 32px;
+  --vd-space-10: 40px;
+
+  /* ---- Raio e sombra ---- */
+  --vd-radius-sm: 5px;
+  --vd-radius: 8px;
+  --vd-radius-lg: 12px;
+  --vd-radius-full: 999px;
+  --vd-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --vd-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* ---- Layout ---- */
+  --vd-sidebar-w: 232px;
+  --vd-header-h: 56px;
+
+  /* ---- Movimento ---- */
+  --vd-transition: 140ms ease;
+}

@@ -1,0 +1,31 @@
+# Dependências
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+
+# Segredos — NUNCA commitar
+.env
+.env.local
+.env.*.local
+
+# Banco local
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Sistema
+.DS_Store
+Thumbs.db

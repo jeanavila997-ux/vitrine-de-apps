@@ -1,0 +1,100 @@
+<!-- @dsCard group="Fundações" name="Cores, tipografia e espaçamento" subtitle="Paleta escura, escala tipográfica, escala de 4px" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fundações — Vitrine de Apps</title>
+<style>
+:root{--vd-bg:#16181d;--vd-surface:#1e2128;--vd-surface-hover:#262a33;--vd-surface-sunken:#121419;--vd-border:#2f343d;--vd-border-strong:#3d434e;--vd-text:#e6e8ec;--vd-text-muted:#9aa1ad;--vd-text-faint:#6b7280;--vd-accent:#cc785c;--vd-accent-hover:#d98a70;--vd-online:#4ade80;--vd-offline:#6b7280;--vd-warning:#fbbf24;--vd-error:#f87171;--vd-app-multichat:#8b5cf6;--vd-app-estante:#f59e0b;--vd-app-bovinos:#10b981;--vd-app-mestrepc:#3b82f6;--vd-app-boicontrol:#ef4444;--vd-font:'Segoe UI',system-ui,-apple-system,sans-serif;--vd-font-mono:'Cascadia Code',Consolas,'SF Mono',monospace;--vd-radius:8px;--vd-radius-sm:5px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--vd-bg);color:var(--vd-text);font-family:var(--vd-font);padding:32px;font-size:14px;line-height:1.55}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--vd-text-muted);margin:36px 0 14px;font-weight:600}
+h2:first-of-type{margin-top:0}
+.grid{display:grid;gap:12px}
+.swatches{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.sw{border:1px solid var(--vd-border);border-radius:var(--vd-radius);overflow:hidden;background:var(--vd-surface)}
+.sw .chip{height:56px}
+.sw .meta{padding:9px 11px;border-top:1px solid var(--vd-border)}
+.sw .nm{font-size:12px;font-weight:600;display:block}
+.sw .hx{font-size:11px;color:var(--vd-text-faint);font-family:var(--vd-font-mono);display:block;margin-top:2px}
+.type-row{display:flex;align-items:baseline;gap:18px;padding:9px 0;border-bottom:1px solid var(--vd-border)}
+.type-row:last-child{border-bottom:none}
+.type-row .lbl{font-family:var(--vd-font-mono);font-size:11px;color:var(--vd-text-faint);width:130px;flex-shrink:0}
+.space-row{display:flex;align-items:center;gap:14px;padding:5px 0}
+.space-row .lbl{font-family:var(--vd-font-mono);font-size:11px;color:var(--vd-text-faint);width:130px;flex-shrink:0}
+.space-row .bar{height:15px;background:var(--vd-accent);border-radius:3px}
+.radii{display:flex;gap:14px;flex-wrap:wrap}
+.radii div{width:74px;height:74px;background:var(--vd-surface);border:1px solid var(--vd-border-strong);display:flex;align-items:flex-end;justify-content:center;padding-bottom:7px;font-family:var(--vd-font-mono);font-size:10px;color:var(--vd-text-faint)}
+</style>
+</head>
+<body>
+
+<h2>Superfícies</h2>
+<div class="grid swatches">
+  <div class="sw"><div class="chip" style="background:#16181d"></div><div class="meta"><span class="nm">bg</span><span class="hx">#16181d</span></div></div>
+  <div class="sw"><div class="chip" style="background:#1e2128"></div><div class="meta"><span class="nm">surface</span><span class="hx">#1e2128</span></div></div>
+  <div class="sw"><div class="chip" style="background:#262a33"></div><div class="meta"><span class="nm">surface-hover</span><span class="hx">#262a33</span></div></div>
+  <div class="sw"><div class="chip" style="background:#121419"></div><div class="meta"><span class="nm">surface-sunken</span><span class="hx">#121419</span></div></div>
+  <div class="sw"><div class="chip" style="background:#2f343d"></div><div class="meta"><span class="nm">border</span><span class="hx">#2f343d</span></div></div>
+  <div class="sw"><div class="chip" style="background:#3d434e"></div><div class="meta"><span class="nm">border-strong</span><span class="hx">#3d434e</span></div></div>
+</div>
+
+<h2>Texto e marca</h2>
+<div class="grid swatches">
+  <div class="sw"><div class="chip" style="background:#e6e8ec"></div><div class="meta"><span class="nm">text</span><span class="hx">#e6e8ec</span></div></div>
+  <div class="sw"><div class="chip" style="background:#9aa1ad"></div><div class="meta"><span class="nm">text-muted</span><span class="hx">#9aa1ad</span></div></div>
+  <div class="sw"><div class="chip" style="background:#6b7280"></div><div class="meta"><span class="nm">text-faint</span><span class="hx">#6b7280</span></div></div>
+  <div class="sw"><div class="chip" style="background:#cc785c"></div><div class="meta"><span class="nm">accent</span><span class="hx">#cc785c</span></div></div>
+  <div class="sw"><div class="chip" style="background:#d98a70"></div><div class="meta"><span class="nm">accent-hover</span><span class="hx">#d98a70</span></div></div>
+</div>
+
+<h2>Estado</h2>
+<div class="grid swatches">
+  <div class="sw"><div class="chip" style="background:#4ade80"></div><div class="meta"><span class="nm">online</span><span class="hx">#4ade80</span></div></div>
+  <div class="sw"><div class="chip" style="background:#6b7280"></div><div class="meta"><span class="nm">offline</span><span class="hx">#6b7280</span></div></div>
+  <div class="sw"><div class="chip" style="background:#fbbf24"></div><div class="meta"><span class="nm">warning</span><span class="hx">#fbbf24</span></div></div>
+  <div class="sw"><div class="chip" style="background:#f87171"></div><div class="meta"><span class="nm">error</span><span class="hx">#f87171</span></div></div>
+</div>
+
+<h2>Identidade dos apps</h2>
+<div class="grid swatches">
+  <div class="sw"><div class="chip" style="background:#8b5cf6"></div><div class="meta"><span class="nm">MULT-CHAT-HUB</span><span class="hx">#8b5cf6</span></div></div>
+  <div class="sw"><div class="chip" style="background:#f59e0b"></div><div class="meta"><span class="nm">Estante de Ebooks</span><span class="hx">#f59e0b</span></div></div>
+  <div class="sw"><div class="chip" style="background:#10b981"></div><div class="meta"><span class="nm">Cruzamento Bovinos</span><span class="hx">#10b981</span></div></div>
+  <div class="sw"><div class="chip" style="background:#3b82f6"></div><div class="meta"><span class="nm">Mestre do PC V10</span><span class="hx">#3b82f6</span></div></div>
+  <div class="sw"><div class="chip" style="background:#ef4444"></div><div class="meta"><span class="nm">BoiControl</span><span class="hx">#ef4444</span></div></div>
+</div>
+
+<h2>Tipografia</h2>
+<div>
+  <div class="type-row"><span class="lbl">2xl / 26px / 600</span><span style="font-size:26px;font-weight:600">Dashboard</span></div>
+  <div class="type-row"><span class="lbl">xl / 20px / 600</span><span style="font-size:20px;font-weight:600">Seção do aplicativo</span></div>
+  <div class="type-row"><span class="lbl">lg / 16px / 600</span><span style="font-size:16px;font-weight:600">Nome do app no card</span></div>
+  <div class="type-row"><span class="lbl">base / 14px / 400</span><span style="font-size:14px">Texto de interface padrão</span></div>
+  <div class="type-row"><span class="lbl">sm / 13px / 400</span><span style="font-size:13px;color:#9aa1ad">Descrição secundária e rótulos</span></div>
+  <div class="type-row"><span class="lbl">xs / 11px / 600</span><span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:#9aa1ad">Cabeçalho de seção</span></div>
+  <div class="type-row"><span class="lbl">mono / 13px</span><span style="font-family:'Cascadia Code',Consolas,monospace;font-size:13px;color:#cc785c">localhost:4400 · PID 18432</span></div>
+</div>
+
+<h2>Espaçamento — escala de 4px</h2>
+<div>
+  <div class="space-row"><span class="lbl">space-1 · 4px</span><span class="bar" style="width:4px"></span></div>
+  <div class="space-row"><span class="lbl">space-2 · 8px</span><span class="bar" style="width:8px"></span></div>
+  <div class="space-row"><span class="lbl">space-3 · 12px</span><span class="bar" style="width:12px"></span></div>
+  <div class="space-row"><span class="lbl">space-4 · 16px</span><span class="bar" style="width:16px"></span></div>
+  <div class="space-row"><span class="lbl">space-5 · 20px</span><span class="bar" style="width:20px"></span></div>
+  <div class="space-row"><span class="lbl">space-6 · 24px</span><span class="bar" style="width:24px"></span></div>
+  <div class="space-row"><span class="lbl">space-8 · 32px</span><span class="bar" style="width:32px"></span></div>
+  <div class="space-row"><span class="lbl">space-10 · 40px</span><span class="bar" style="width:40px"></span></div>
+</div>
+
+<h2>Raio de borda</h2>
+<div class="radii">
+  <div style="border-radius:5px">5px</div>
+  <div style="border-radius:8px">8px</div>
+  <div style="border-radius:12px">12px</div>
+  <div style="border-radius:999px">full</div>
+</div>
+
+</body>
+</html>

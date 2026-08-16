@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vitrine de Apps</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<div class="vd-shell">
+
+  <aside class="vd-sidebar">
+    <div class="vd-sidebar__brand">
+      <div class="vd-sidebar__logo">V</div>
+      <span class="vd-sidebar__title">Vitrine de Apps</span>
+    </div>
+
+    <nav class="vd-sidebar__nav">
+      <a class="vd-navitem vd-navitem--active" data-rota="dashboard">
+        <span class="vd-navitem__icon">⌂</span>
+        <span class="vd-navitem__label">Dashboard</span>
+      </a>
+
+      <div class="vd-navgroup__label">Aplicativos</div>
+      <div id="nav-apps"></div>
+
+      <div class="vd-navgroup__label">Orquestração</div>
+      <a class="vd-navitem" data-rota="automacoes"><span class="vd-navitem__icon">⚙</span><span class="vd-navitem__label">Automações</span></a>
+      <a class="vd-navitem" data-rota="integracoes"><span class="vd-navitem__icon">🔗</span><span class="vd-navitem__label">Integrações</span></a>
+      <a class="vd-navitem" data-rota="agente"><span class="vd-navitem__icon">🤖</span><span class="vd-navitem__label">Agente</span></a>
+      <a class="vd-navitem" data-rota="logs"><span class="vd-navitem__icon">📊</span><span class="vd-navitem__label">Logs</span></a>
+    </nav>
+
+    <div class="vd-sidebar__foot">
+      <div class="vd-user">
+        <div class="vd-user__avatar">JA</div>
+        <div class="vd-user__info">
+          <div class="vd-user__name">Jean Avila</div>
+          <div class="vd-user__meta" id="rodape-status">carregando…</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="vd-main">
+    <header class="vd-header">
+      <div class="vd-header__left">
+        <h1 class="vd-header__title" id="titulo">Dashboard</h1>
+        <span class="vd-breadcrumb" id="subtitulo"></span>
+      </div>
+      <div class="vd-header__right">
+        <button class="vd-btn vd-btn--secondary" id="btn-atualizar">↻ Atualizar</button>
+        <a class="vd-btn vd-btn--primary" href="https://vitrinedeapps.cloud" target="_blank" rel="noopener">Ver site público</a>
+      </div>
+    </header>
+
+    <div class="vd-content" id="conteudo">
+      <div class="vd-placeholder">carregando…</div>
+    </div>
+  </main>
+
+</div>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>

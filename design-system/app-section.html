@@ -1,0 +1,239 @@
+<!-- @dsCard group="Telas" name="Seção do App" subtitle="Página individual — status, controles, integrações, logs" viewport-width="1200" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Seção do App — Vitrine de Apps</title>
+<style>
+:root{--vd-bg:#16181d;--vd-surface:#1e2128;--vd-surface-hover:#262a33;--vd-surface-sunken:#121419;--vd-border:#2f343d;--vd-border-strong:#3d434e;--vd-text:#e6e8ec;--vd-text-muted:#9aa1ad;--vd-text-faint:#6b7280;--vd-accent:#cc785c;--vd-accent-dim:rgba(204,120,92,.14);--vd-online:#4ade80;--vd-offline:#6b7280;--vd-warning:#fbbf24;--vd-error:#f87171;--vd-font:'Segoe UI',system-ui,sans-serif;--vd-font-mono:'Cascadia Code',Consolas,monospace;--vd-sidebar-w:232px;--vd-header-h:56px;--app-color:#8b5cf6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--vd-bg);color:var(--vd-text);font-family:var(--vd-font);font-size:14px}
+.vd-shell{display:grid;grid-template-columns:var(--vd-sidebar-w) 1fr;min-height:820px}
+
+/* sidebar resumida */
+.vd-sidebar{background:var(--vd-surface-sunken);border-right:1px solid var(--vd-border);display:flex;flex-direction:column}
+.vd-sidebar__brand{height:var(--vd-header-h);display:flex;align-items:center;gap:9px;padding:0 16px;border-bottom:1px solid var(--vd-border)}
+.vd-sidebar__logo{width:26px;height:26px;border-radius:7px;background:var(--vd-accent);display:grid;place-items:center;font-size:14px;color:#16181d;font-weight:700}
+.vd-sidebar__title{font-size:14px;font-weight:600}
+.vd-sidebar__nav{flex:1;padding:11px 9px}
+.vd-navgroup__label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--vd-text-faint);padding:12px 9px 6px}
+.vd-navitem{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:7px;color:var(--vd-text-muted);font-size:13.5px;cursor:pointer;position:relative}
+.vd-navitem:hover{background:var(--vd-surface);color:var(--vd-text)}
+.vd-navitem--active{background:var(--vd-accent-dim);color:var(--vd-accent);font-weight:500}
+.vd-navitem--active::before{content:'';position:absolute;left:-9px;top:50%;transform:translateY(-50%);width:3px;height:17px;background:var(--vd-accent);border-radius:0 3px 3px 0}
+.vd-navitem__icon{width:19px;text-align:center;font-size:14px}
+.vd-navitem__label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vd-navitem__dot{width:7px;height:7px;border-radius:50%}
+.vd-navitem__dot--online{background:var(--vd-online);box-shadow:0 0 0 2.5px rgba(74,222,128,.15)}
+.vd-navitem__dot--offline{background:var(--vd-offline)}
+.vd-navitem__dot--starting{background:var(--vd-warning)}
+.vd-navitem__dot--error{background:var(--vd-error)}
+.vd-navitem--muted{opacity:.45}
+.vd-sidebar__foot{padding:11px 9px;border-top:1px solid var(--vd-border)}
+.vd-user{display:flex;align-items:center;gap:9px;padding:6px 9px}
+.vd-user__avatar{width:27px;height:27px;border-radius:50%;background:var(--vd-accent);color:#16181d;display:grid;place-items:center;font-size:11.5px;font-weight:700}
+.vd-user__name{font-size:12.5px;font-weight:500}
+.vd-user__meta{font-size:10.5px;color:var(--vd-text-faint)}
+
+.vd-main{display:flex;flex-direction:column;min-width:0}
+.vd-header{height:var(--vd-header-h);border-bottom:1px solid var(--vd-border);display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.vd-breadcrumb{font-size:12.5px;color:var(--vd-text-faint)}
+.vd-breadcrumb b{color:var(--vd-text-muted);font-weight:400}
+.vd-content{flex:1;padding:22px;overflow-y:auto}
+
+.vd-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:12.5px;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid transparent;cursor:pointer;transition:background 140ms ease}
+.vd-btn--primary{background:var(--vd-accent);color:#16181d;font-weight:600}
+.vd-btn--secondary{background:var(--vd-surface);color:var(--vd-text);border-color:var(--vd-border-strong)}
+.vd-btn--secondary:hover{background:var(--vd-surface-hover)}
+.vd-btn--stop{background:rgba(248,113,113,.13);color:var(--vd-error);border-color:rgba(248,113,113,.28)}
+.vd-btn--start{background:rgba(74,222,128,.13);color:var(--vd-online);border-color:rgba(74,222,128,.28)}
+.vd-btn--sm{padding:5px 10px;font-size:12px}
+
+/* ---- Cabeçalho do app ---- */
+.vd-apphero{display:flex;align-items:flex-start;gap:15px;padding:19px;background:var(--vd-surface);border:1px solid var(--vd-border);border-radius:12px;margin-bottom:19px;position:relative;overflow:hidden}
+.vd-apphero::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--app-color)}
+.vd-apphero__icon{width:54px;height:54px;border-radius:13px;display:grid;place-items:center;font-size:27px;background:color-mix(in srgb,var(--app-color) 16%,transparent);border:1px solid color-mix(in srgb,var(--app-color) 32%,transparent);flex-shrink:0}
+.vd-apphero__info{flex:1;min-width:0}
+.vd-apphero__name{font-size:20px;font-weight:600;margin:0 0 4px}
+.vd-apphero__desc{font-size:13px;color:var(--vd-text-muted);margin:0 0 10px;line-height:1.5}
+.vd-apphero__meta{display:flex;gap:15px;flex-wrap:wrap;font-size:11.5px;color:var(--vd-text-faint);font-family:var(--vd-font-mono)}
+.vd-apphero__actions{display:flex;gap:8px;flex-shrink:0}
+
+.vd-status{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:999px;font-size:11.5px;font-weight:500}
+.vd-status .dot{width:6px;height:6px;border-radius:50%}
+.vd-status--online{background:rgba(74,222,128,.14);color:#4ade80}
+.vd-status--online .dot{background:#4ade80}
+
+/* ---- Abas ---- */
+.vd-tabs{display:flex;gap:3px;border-bottom:1px solid var(--vd-border);margin-bottom:19px}
+.vd-tab{padding:9px 15px;font-size:13px;color:var(--vd-text-muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color 140ms ease}
+.vd-tab:hover{color:var(--vd-text)}
+.vd-tab--active{color:var(--vd-accent);border-bottom-color:var(--vd-accent);font-weight:500}
+
+/* ---- Grid de painéis ---- */
+.vd-cols{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+.vd-panel{background:var(--vd-surface);border:1px solid var(--vd-border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.vd-panel__head{padding:12px 15px;border-bottom:1px solid var(--vd-border);display:flex;align-items:center;justify-content:space-between}
+.vd-panel__title{font-size:13px;font-weight:600;margin:0}
+.vd-panel__body{padding:15px}
+
+.vd-kv{display:grid;grid-template-columns:112px 1fr;gap:9px 14px;font-size:12.5px}
+.vd-kv dt{color:var(--vd-text-faint)}
+.vd-kv dd{margin:0;font-family:var(--vd-font-mono);font-size:11.5px;word-break:break-all}
+.vd-kv dd a{color:var(--vd-accent);text-decoration:none}
+
+/* ---- Terminal de logs ---- */
+.vd-terminal{background:#0e1014;font-family:var(--vd-font-mono);font-size:11.5px;line-height:1.75;padding:13px 15px;max-height:210px;overflow-y:auto}
+.vd-terminal .t{color:#4b5563;margin-right:9px}
+.vd-terminal .ok{color:#4ade80}
+.vd-terminal .warn{color:#fbbf24}
+.vd-terminal .err{color:#f87171}
+.vd-terminal .dim{color:#6b7280}
+
+/* ---- Integrações ---- */
+.vd-integration{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--vd-border);font-size:12.5px}
+.vd-integration:last-child{border-bottom:none}
+.vd-integration__ico{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:13px;flex-shrink:0}
+.vd-integration__body{flex:1;min-width:0}
+.vd-integration__name{font-weight:500;margin-bottom:1px}
+.vd-integration__desc{font-size:11px;color:var(--vd-text-faint)}
+.vd-toggle{width:33px;height:19px;border-radius:999px;background:var(--vd-border-strong);position:relative;cursor:pointer;flex-shrink:0;transition:background 140ms ease}
+.vd-toggle::after{content:'';position:absolute;top:2.5px;left:2.5px;width:14px;height:14px;border-radius:50%;background:#9aa1ad;transition:transform 140ms ease,background 140ms ease}
+.vd-toggle--on{background:rgba(74,222,128,.3)}
+.vd-toggle--on::after{transform:translateX(14px);background:#4ade80}
+</style>
+</head>
+<body>
+
+<div class="vd-shell">
+
+  <aside class="vd-sidebar">
+    <div class="vd-sidebar__brand">
+      <div class="vd-sidebar__logo">V</div><span class="vd-sidebar__title">Vitrine de Apps</span>
+    </div>
+    <nav class="vd-sidebar__nav">
+      <div class="vd-navitem"><span class="vd-navitem__icon">⌂</span><span class="vd-navitem__label">Dashboard</span></div>
+      <div class="vd-navgroup__label">Aplicativos</div>
+      <div class="vd-navitem vd-navitem--active"><span class="vd-navitem__icon">💬</span><span class="vd-navitem__label">MULT-CHAT-HUB</span><span class="vd-navitem__dot vd-navitem__dot--online"></span></div>
+      <div class="vd-navitem vd-navitem--muted"><span class="vd-navitem__icon">📚</span><span class="vd-navitem__label">Estante de Ebooks</span><span class="vd-navitem__dot vd-navitem__dot--offline"></span></div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">🐂</span><span class="vd-navitem__label">Cruzamento Bovinos</span><span class="vd-navitem__dot vd-navitem__dot--starting"></span></div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">🖥️</span><span class="vd-navitem__label">Mestre do PC V10</span><span class="vd-navitem__dot vd-navitem__dot--offline"></span></div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">🐄</span><span class="vd-navitem__label">BoiControl</span><span class="vd-navitem__dot vd-navitem__dot--error"></span></div>
+      <div class="vd-navgroup__label">Orquestração</div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">⚙</span><span class="vd-navitem__label">Automações</span></div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">🔗</span><span class="vd-navitem__label">Integrações</span></div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">🤖</span><span class="vd-navitem__label">Agente</span></div>
+      <div class="vd-navitem"><span class="vd-navitem__icon">📊</span><span class="vd-navitem__label">Logs</span></div>
+    </nav>
+    <div class="vd-sidebar__foot">
+      <div class="vd-user"><div class="vd-user__avatar">JA</div><div><div class="vd-user__name">Jean Avila</div><div class="vd-user__meta">Administrador</div></div></div>
+    </div>
+  </aside>
+
+  <main class="vd-main">
+    <header class="vd-header">
+      <span class="vd-breadcrumb"><b>Aplicativos</b> / MULT-CHAT-HUB</span>
+      <button class="vd-btn vd-btn--secondary vd-btn--sm">⋯ Opções</button>
+    </header>
+
+    <div class="vd-content">
+
+      <div class="vd-apphero">
+        <div class="vd-apphero__icon">💬</div>
+        <div class="vd-apphero__info">
+          <h1 class="vd-apphero__name">MULT-CHAT-HUB <span class="vd-status vd-status--online" style="vertical-align:middle;margin-left:7px"><span class="dot"></span>online</span></h1>
+          <p class="vd-apphero__desc">Hub de chat com IA. Monorepo pnpm com versão desktop (lite, Electron) e versão web (cloud, Next.js).</p>
+          <div class="vd-apphero__meta">
+            <span>PID 18432</span><span>no ar há 2h 14min</span><span>:3001 · :3000 · :3002</span>
+          </div>
+        </div>
+        <div class="vd-apphero__actions">
+          <button class="vd-btn vd-btn--secondary">Abrir app</button>
+          <button class="vd-btn vd-btn--stop">■ Parar</button>
+        </div>
+      </div>
+
+      <div class="vd-tabs">
+        <div class="vd-tab vd-tab--active">Visão geral</div>
+        <div class="vd-tab">Logs</div>
+        <div class="vd-tab">Integrações</div>
+        <div class="vd-tab">Automações</div>
+        <div class="vd-tab">Configuração</div>
+      </div>
+
+      <div class="vd-cols">
+
+        <div>
+          <div class="vd-panel">
+            <div class="vd-panel__head"><h3 class="vd-panel__title">Saída do processo</h3><span style="font-size:11px;color:#6b7280">ao vivo</span></div>
+            <div class="vd-terminal">
+              <div><span class="t">06:41:02</span><span class="dim">$ pnpm run dev:lite</span></div>
+              <div><span class="t">06:41:04</span>turbo 2.5.0 — executando <span class="dim">dev</span> em 1 pacote</div>
+              <div><span class="t">06:41:06</span>VITE v6.0.7 pronto em <span class="ok">1243 ms</span></div>
+              <div><span class="t">06:41:06</span>  ➜  Local:   <span class="ok">http://localhost:3001/</span></div>
+              <div><span class="t">06:41:06</span>  ➜  Network: http://192.168.0.14:3001/</div>
+              <div><span class="t">06:41:09</span><span class="dim">[server]</span> API ouvindo em :3000</div>
+              <div><span class="t">06:41:11</span><span class="dim">[ollama]</span> conectado em 127.0.0.1:11434</div>
+              <div><span class="t">06:42:33</span><span class="warn">aviso</span> chave do Supabase ausente — modo cloud desabilitado</div>
+              <div><span class="t">06:44:18</span>hmr atualizado <span class="dim">/src/components/ChatPanel.tsx</span></div>
+            </div>
+          </div>
+
+          <div class="vd-panel">
+            <div class="vd-panel__head"><h3 class="vd-panel__title">Integrações com outros apps</h3><button class="vd-btn vd-btn--sm vd-btn--secondary">+ Adicionar</button></div>
+            <div class="vd-panel__body" style="padding-top:4px;padding-bottom:4px">
+              <div class="vd-integration">
+                <div class="vd-integration__ico" style="background:rgba(59,130,246,.14);color:#3b82f6">🖥️</div>
+                <div class="vd-integration__body">
+                  <div class="vd-integration__name">Mestre do PC V10</div>
+                  <div class="vd-integration__desc">Compartilha o Ollama em 127.0.0.1:11434</div>
+                </div>
+                <div class="vd-toggle vd-toggle--on"></div>
+              </div>
+              <div class="vd-integration">
+                <div class="vd-integration__ico" style="background:rgba(245,158,11,.14);color:#f59e0b">📚</div>
+                <div class="vd-integration__body">
+                  <div class="vd-integration__name">Estante de Ebooks</div>
+                  <div class="vd-integration__desc">Enviar ebook para o chat como contexto</div>
+                </div>
+                <div class="vd-toggle"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="vd-panel">
+            <div class="vd-panel__head"><h3 class="vd-panel__title">Informações</h3></div>
+            <div class="vd-panel__body">
+              <dl class="vd-kv">
+                <dt>Pasta</dt><dd>C:\Users\Jeanc\MULT-CHAT-HUB</dd>
+                <dt>Repositório</dt><dd><a href="#">avila2026/MULT-CHAT-HUB</a></dd>
+                <dt>Branch</dt><dd>main</dd>
+                <dt>Stack</dt><dd>pnpm · turbo · Vite · React</dd>
+                <dt>Comando</dt><dd>pnpm run dev:lite</dd>
+                <dt>Banco</dt><dd>Supabase</dd>
+                <dt>Último start</dt><dd>16/08 06:41</dd>
+              </dl>
+            </div>
+          </div>
+
+          <div class="vd-panel">
+            <div class="vd-panel__head"><h3 class="vd-panel__title">Ações rápidas</h3></div>
+            <div class="vd-panel__body" style="display:flex;flex-direction:column;gap:7px">
+              <button class="vd-btn vd-btn--secondary" style="justify-content:flex-start">📂 Abrir pasta</button>
+              <button class="vd-btn vd-btn--secondary" style="justify-content:flex-start">⌨ Abrir no VS Code</button>
+              <button class="vd-btn vd-btn--secondary" style="justify-content:flex-start">🌐 Abrir no navegador</button>
+              <button class="vd-btn vd-btn--secondary" style="justify-content:flex-start">↻ Reiniciar</button>
+              <button class="vd-btn vd-btn--secondary" style="justify-content:flex-start">🤖 Perguntar ao agente</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

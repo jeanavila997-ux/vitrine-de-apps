@@ -1,0 +1,279 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Vitrine de Apps — Plano de Criação</title><style>
+body{font-family:'Segoe UI',system-ui,sans-serif;max-width:900px;margin:0 auto;padding:36px 44px;color:#1f2328;line-height:1.65;font-size:14px}
+h1{font-size:30px;border-bottom:3px solid #cc785c;padding-bottom:12px;margin-bottom:4px;color:#0f1419}
+h2{font-size:21px;margin-top:34px;border-bottom:1px solid #d8dce0;padding-bottom:6px;color:#0f1419;page-break-after:avoid}
+h3{font-size:16px;margin-top:22px;color:#3a4148;page-break-after:avoid}
+table{border-collapse:collapse;width:100%;margin:14px 0;font-size:13px;page-break-inside:avoid}
+th{background:#f2f4f6;text-align:left;font-weight:600}
+th,td{border:1px solid #d8dce0;padding:7px 11px;vertical-align:top}
+tr:nth-child(even) td{background:#fafbfc}
+code{background:#f2f4f6;padding:2px 5px;border-radius:3px;font-family:Consolas,monospace;font-size:12.5px;color:#b8503a}
+pre{background:#f7f8fa;border:1px solid #e1e5e9;border-left:3px solid #cc785c;padding:14px 16px;border-radius:5px;overflow-x:auto;page-break-inside:avoid}
+pre code{background:none;padding:0;color:#1f2328;font-size:12px;line-height:1.5}
+blockquote{border-left:3px solid #cc785c;background:#fdf6f3;margin:14px 0;padding:10px 16px;color:#4a5158}
+hr{border:none;border-top:1px solid #e1e5e9;margin:30px 0}
+a{color:#0969da;text-decoration:none}
+ul{padding-left:24px}li{margin:4px 0}
+strong{color:#0f1419}
+@page{margin:1.6cm}
+</style></head><body><h1>Vitrine de Apps — Plano de Criação</h1>
+<p><strong>Domínio público:</strong> <a href="https://vitrinedeapps.cloud">https://vitrinedeapps.cloud</a></p>
+<p><strong>Pasta do projeto:</strong> <code>C:\Users\Jeanc\vitrine-de-apps</code> (repositório git próprio)</p>
+<p><strong>Última atualização:</strong> 16/08/2026</p>
+<hr>
+<h2>1. O que é</h2>
+<p>Um <strong>app gerenciador dos seus projetos</strong>: uma dashboard inicial com visão geral</p>
+<p>de tudo, um menu lateral, e uma seção dedicada para cada aplicativo.</p>
+<p>Objetivo declarado: **automações, integrações e redirecionamentos completos</p>
+<p>entre os seus aplicativos**.</p>
+<h3>Navegação</h3>
+<pre><code>
+┌─────────────┬──────────────────────────────────────┐
+│             │                                      │
+│  MENU       │   DASHBOARD (tela inicial)           │
+│             │   ─────────────────────────          │
+│  ⌂ Dashboard│   • Cards de status dos 5 apps       │
+│             │   • Quais estão online/offline       │
+│  ─ APPS ─   │   • Atividade recente                │
+│  💬 Mult-Chat│   • Atalhos rápidos                  │
+│  📚 Estante  │                                      │
+│  🐂 Cruzamento│  ── ou, ao clicar num app ──        │
+│  🖥 Mestre PC│   SEÇÃO DO APP                       │
+│  🐄 BoiControl│  • Status, versão, repo, porta      │
+│             │   • Botão iniciar/parar              │
+│  ─ ─ ─ ─    │   • Abrir app / abrir código         │
+│  ⚙ Automações│  • Logs e histórico                 │
+│  🤖 Agente   │   • Integrações com outros apps      │
+│  📊 Logs     │                                      │
+└─────────────┴──────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2>2. Os 5 aplicativos da vitrine</h2>
+<p>Levantamento feito direto no disco e no GitHub (16/08/2026):</p>
+<table><thead><tr><th>App</th><th>Stack</th><th>Porta</th><th>Tipo</th><th>Banco</th><th>Login próprio</th></tr></thead><tbody>
+<tr><td><strong>MULT-CHAT-HUB</strong></td><td>Monorepo pnpm+turbo, Vite+React+Electron / Next.js</td><td>3001 (lite), 3000 (API), 3002 (cloud)</td><td>Web + Electron</td><td>Supabase</td><td>Parcial</td></tr>
+<tr><td><strong>Estante de Ebooks</strong></td><td>Electron + React + Vite + Fastify + PWA</td><td>5173 (Vite), 3000 (Fastify)</td><td>Desktop + Web</td><td>SQLite</td><td><strong>Sim</strong> (bcrypt+JWT)</td></tr>
+<tr><td><strong>app-cruzamento-bovinos</strong></td><td>React 19 + Vite + Tailwind v4 + Electron</td><td>5173 (dev), 3000 (prod)</td><td>SPA + Electron</td><td>Supabase</td><td>Não</td></tr>
+<tr><td><strong>Mestre do PC V10</strong></td><td>Node + PowerShell + MCP + Ollama</td><td>7777</td><td>Serviço local</td><td>Nenhum</td><td>Não</td></tr>
+<tr><td><strong>BoiControl</strong></td><td>React + Vite + shadcn + PWA</td><td>8080</td><td>SPA / PWA</td><td>Supabase + IndexedDB</td><td>Não</td></tr>
+</tbody></table>
+<h3>Onde cada um está</h3>
+<table><thead><tr><th>App</th><th>Pasta local</th><th>Repositório</th></tr></thead><tbody>
+<tr><td>MULT-CHAT-HUB</td><td><code>C:\Users\Jeanc\MULT-CHAT-HUB</code></td><td><code>avila2026/MULT-CHAT-HUB</code></td></tr>
+<tr><td>Estante de Ebooks</td><td><code>F:\DOWNLOADS\Estante de Ebooks\app</code></td><td><code>jeanavila997-ux/Estante-de-Ebooks</code></td></tr>
+<tr><td>app-cruzamento-bovinos</td><td><code>C:\Users\Jeanc\projects\app-cruzamento-bovinos</code></td><td><code>avila2026/app-cruzamento-bovinos</code></td></tr>
+<tr><td>Mestre do PC V10</td><td><code>C:\Users\Jeanc\Mestre-do-PC-V10-clean</code></td><td><code>jeanavila997-ux/Mestre-do-PC-V10</code></td></tr>
+<tr><td>BoiControl</td><td><code>C:\Users\Jeanc\projects\boicontrol</code></td><td><code>jeanavila997-ux/boicontrol</code></td></tr>
+</tbody></table>
+<h3>Divergências encontradas — precisam da sua decisão</h3>
+<p>1. <strong>Estante de Ebooks tem dois repositórios</strong>, ambos públicos e com conteúdo:</p>
+<p>   <code>avila2026/Estante-de-Ebooks</code> e <code>jeanavila997-ux/Estante-de-Ebooks</code>. A cópia</p>
+<p>   local aponta para o segundo. Qual é o oficial?</p>
+<p>2. <strong>A Estante mora no drive F:</strong> (<code>F:\DOWNLOADS\...</code>). Se esse drive for</p>
+<p>   removível, a vitrine não vai encontrá-la quando estiver desconectado.</p>
+<p>3. <strong><code>app-cruzamento-bovinos</code> tem branch padrão <code>main-</code></strong> (com hífen no fim) —</p>
+<p>   provavelmente um erro de digitação em algum momento.</p>
+<p>4. <strong>Cópias duplicadas</strong>: MULT-CHAT-HUB e Mestre do PC existem em dois lugares</p>
+<p>   cada. A vitrine vai catalogar a mais recente e ignorar a antiga.</p>
+<hr>
+<h2>3. ⚠ Ação urgente de segurança</h2>
+<p>**<code>C:\Users\Jeanc\projects\boicontrol\.env</code> está commitado no GitHub, num</p>
+<p>repositório público.** Confirmado com <code>git ls-files .env</code>. A chave do Supabase</p>
+<p>está exposta publicamente.</p>
+<p>Correção recomendada (fora do escopo desta vitrine, mas urgente):</p>
+<pre><code>
+cd C:\Users\Jeanc\projects\boicontrol
+git rm --cached .env
+echo ".env" &gt;&gt; .gitignore
+git commit -m "fix: remove .env do versionamento"
+git push
+</code></pre>
+<p>E depois <strong>rotacionar a chave no painel do Supabase</strong> — remover do git não apaga</p>
+<p>o histórico, a chave antiga continua acessível para quem procurar.</p>
+<p>Outros pontos, menos graves:</p>
+<ul>
+<li><code>MULT-CHAT-HUB/.env.example</code> lista chaves sensíveis (conferir se são</li>
+</ul>
+<p>  placeholders de verdade antes de qualquer publicação)</p>
+<ul>
+<li>Senha do MySQL da Hostinger apareceu num print de tela — trocar após a Fase 7</li>
+</ul>
+<hr>
+<h2>4. Decisões tomadas</h2>
+<table><thead><tr><th>Decisão</th><th>Escolha</th></tr></thead><tbody>
+<tr><td>Linguagem do agente</td><td><strong>TypeScript E Python</strong> — mesmo agente espelhado nos dois SDKs</td></tr>
+<tr><td>Banco de dados</td><td><strong>SQLite local</strong> (fonte da verdade offline) <strong>+ MySQL Hostinger</strong> (produção)</td></tr>
+<tr><td>Autenticação</td><td>Login próprio, e-mail e senha (bcrypt + cookie httpOnly)</td></tr>
+<tr><td>Escopo do MVP</td><td>Dashboard + menu + seções dos 5 apps + iniciar/parar + agente</td></tr>
+<tr><td>Deploy</td><td><code>vitrinedeapps.cloud</code> via SSH (Hostinger)</td></tr>
+</tbody></table>
+<hr>
+<h2>5. Dois modos de operação</h2>
+<p>Essa distinção é o ponto mais importante da arquitetura, porque os apps são</p>
+<p>muito diferentes entre si:</p>
+<h3>Modo Local (na sua máquina, porta 4400)</h3>
+<p>A vitrine controla os apps de verdade: inicia, para, mostra status ao vivo,</p>
+<p>abre o código. Funciona com todos os 5, inclusive o Mestre do PC (que só roda</p>
+<p>em <code>127.0.0.1</code>) e os Electron.</p>
+<h3>Modo Público (vitrinedeapps.cloud)</h3>
+<p>O servidor da Hostinger não tem como iniciar processos na sua máquina. Lá a</p>
+<p>vitrine é um <strong>portal</strong>: mostra cada app, o que faz, prints, e leva para onde</p>
+<p>o app realmente está.</p>
+<table><thead><tr><th>App</th><th>Como aparece no site público</th></tr></thead><tbody>
+<tr><td>MULT-CHAT-HUB</td><td>Link para a versão cloud (Next.js)</td></tr>
+<tr><td>Estante de Ebooks</td><td>Página do app + download do instalador</td></tr>
+<tr><td>app-cruzamento-bovinos</td><td>Build estático hospedado em subpasta</td></tr>
+<tr><td>Mestre do PC V10</td><td>Página de apresentação + download (é local-only)</td></tr>
+<tr><td>BoiControl</td><td>Build estático (PWA) hospedado em subpasta</td></tr>
+</tbody></table>
+<p>Estrutura no servidor:</p>
+<pre><code>
+vitrinedeapps.cloud/                    → dashboard (portal)
+vitrinedeapps.cloud/apps/boicontrol/    → build estático
+vitrinedeapps.cloud/apps/cruzamento/    → build estático
+vitrinedeapps.cloud/apps/estante/       → página + download
+vitrinedeapps.cloud/apps/mestre-pc/     → página + download
+vitrinedeapps.cloud/apps/mult-chat/     → redireciona para o cloud
+</code></pre>
+<hr>
+<h2>6. Infraestrutura Hostinger</h2>
+<h3>Banco MySQL</h3>
+<p>Banco provisionado no hPanel da Hostinger. Host, nome, usuário e senha ficam</p>
+<p>todos em <code>.env</code> (git-ignorado) — ver <code>.env.example</code> para as chaves esperadas:</p>
+<p><code>DB_HOST</code>, <code>DB_PORT</code>, <code>DB_NAME</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>.</p>
+<blockquote>O banco roda <strong>MariaDB 11.8.8</strong>, não MySQL. O schema passou sem ajuste, mas</blockquote>
+<blockquote>vale lembrar disso se um dia precisarmos de recurso específico do MySQL 8.</blockquote>
+<h3>Acesso SSH</h3>
+<p>Habilitado no hPanel (Avançado → Acesso SSH). Host, porta e usuário ficam em</p>
+<p><code>.env</code>: <code>SSH_HOST</code>, <code>SSH_PORT</code>, <code>SSH_USER</code>, <code>SSH_REMOTE_PATH</code>.</p>
+<blockquote><strong>Recomendação:</strong> troque a autenticação por senha por <strong>chave SSH</strong> (o hPanel</blockquote>
+<blockquote>tem a opção "Adicionar chave SSH"). Isso permite deploy automatizado sem senha</blockquote>
+<blockquote>digitada e é bem mais seguro. Eu gero o par de chaves quando você quiser.</blockquote>
+<p><strong>Por que dois bancos?</strong> O app roda na sua máquina controlando processos locais,</p>
+<p>então precisa funcionar sem internet — daí o SQLite. O MySQL guarda a cópia</p>
+<p>sincronizada que alimenta o site público.</p>
+<hr>
+<h2>7. Portas escolhidas</h2>
+<p>Seu ambiente já tem colisões — <strong>3000</strong> é disputada por MULT-CHAT-HUB, Estante e</p>
+<p>cruzamento-bovinos; <strong>5173</strong> por Estante e cruzamento-bovinos. A vitrine usa</p>
+<p>faixa livre:</p>
+<table><thead><tr><th>Porta</th><th>Uso</th></tr></thead><tbody>
+<tr><td><strong>4400</strong></td><td>Servidor Express (API + serve a UI em produção)</td></tr>
+<tr><td><strong>4401</strong></td><td>Vite dev server (só em desenvolvimento)</td></tr>
+<tr><td><strong>4410–4460</strong></td><td>Pool reservado para apps lançados pela Vitrine</td></tr>
+</tbody></table>
+<p>A vitrine vai <strong>detectar colisão antes de iniciar</strong> um app e avisar, em vez de</p>
+<p>falhar silenciosamente.</p>
+<hr>
+<h2>8. Estrutura de pastas</h2>
+<pre><code>
+vitrine-de-apps/
+├── server/                     # Backend Express (porta 4400)
+│   ├── index.js                # Entrada do servidor
+│   ├── db.js                   # SQLite + pool MySQL
+│   ├── auth.js                 # Login, sessão, bcrypt
+│   ├── scanner.js              # Varre o disco e cataloga projetos
+│   ├── process-manager.js      # Inicia/para apps (spawn + taskkill)
+│   ├── sync-mysql.js           # Sincroniza SQLite → MySQL Hostinger
+│   ├── apps-registry.json      # Os 5 apps: caminho, comando, porta, ícone
+│   ├── allowed-commands.json   # Allowlist de comandos permitidos
+│   └── schema.sql              # DDL das tabelas
+│
+├── web/                        # Frontend Vite + React + TypeScript
+│   ├── src/
+│   │   ├── layouts/AppShell.tsx    # Menu lateral + área de conteúdo
+│   │   ├── pages/
+│   │   │   ├── Login.tsx
+│   │   │   ├── Dashboard.tsx       # Tela inicial
+│   │   │   ├── AppSection.tsx      # Seção individual de cada app
+│   │   │   ├── Automacoes.tsx
+│   │   │   ├── Agente.tsx
+│   │   │   └── Logs.tsx
+│   │   └── components/
+│   └── vite.config.ts
+│
+├── agent-ts/                   # Agente em TypeScript
+├── agent-py/                   # Agente em Python (espelho)
+├── shared/agent-contract.json  # Fonte única das ferramentas
+├── deploy/deploy.sh            # Build + rsync via SSH
+├── .env                        # Credenciais (git-ignorado)
+└── PLANO.md                    # Este arquivo
+</code></pre>
+<hr>
+<h2>9. Schema do banco</h2>
+<p>Oito tabelas, iguais no SQLite e no MySQL:</p>
+<table><thead><tr><th>Tabela</th><th>Guarda</th></tr></thead><tbody>
+<tr><td><code>usuarios</code></td><td>Login: e-mail, hash da senha, data de criação</td></tr>
+<tr><td><code>sessoes</code></td><td>Sessões ativas com expiração</td></tr>
+<tr><td><code>apps</code></td><td>Os 5 apps: nome, slug, caminho, repo, stack, porta, comando, ícone</td></tr>
+<tr><td><code>app_status</code></td><td>Última checagem: online/offline, PID, uptime</td></tr>
+<tr><td><code>execucoes</code></td><td>Histórico de quem iniciou/parou qual app e quando</td></tr>
+<tr><td><code>automacoes</code></td><td>Regras "quando X acontecer, faça Y"</td></tr>
+<tr><td><code>integracoes</code></td><td>Ligações entre apps (ex.: app A chama a API do app B)</td></tr>
+<tr><td><code>logs_agente</code></td><td>Tudo que o agente fez, para auditoria</td></tr>
+</tbody></table>
+<hr>
+<h2>10. As 7 ferramentas do agente</h2>
+<p>Definidas uma vez em <code>shared/agent-contract.json</code> e implementadas identicamente</p>
+<p>nos dois SDKs — é isso que garante que o agente TS e o Python sejam o mesmo</p>
+<p>agente.</p>
+<table><thead><tr><th>#</th><th>Ferramenta</th><th>O que faz</th><th>Destrutiva?</th></tr></thead><tbody>
+<tr><td>1</td><td><code>listar_apps</code></td><td>Lista os apps do catálogo</td><td>Não</td></tr>
+<tr><td>2</td><td><code>detalhar_app</code></td><td>Detalhes de um app específico</td><td>Não</td></tr>
+<tr><td>3</td><td><code>status_apps</code></td><td>Quais apps estão rodando agora</td><td>Não</td></tr>
+<tr><td>4</td><td><code>escanear_disco</code></td><td>Varre o disco procurando projetos novos</td><td>Não</td></tr>
+<tr><td>5</td><td><code>iniciar_app</code></td><td>Sobe um app</td><td><strong>Sim — pede confirmação</strong></td></tr>
+<tr><td>6</td><td><code>parar_app</code></td><td>Derruba um app</td><td><strong>Sim — pede confirmação</strong></td></tr>
+<tr><td>7</td><td><code>registrar_automacao</code></td><td>Cria uma regra de automação</td><td>Sim</td></tr>
+</tbody></table>
+<hr>
+<h2>11. Segurança</h2>
+<p>Regras herdadas do Mestre do PC V10, que já provaram valor:</p>
+<p>1. <strong>Allowlist obrigatória</strong> — todo comando executável fica registrado em</p>
+<p>   <code>allowed-commands.json</code>. Nada de comando livre ou gerado por IA.</p>
+<p>2. <strong>Sanitização de entrada</strong> — argumentos passam por filtro que rejeita</p>
+<p>   qualquer coisa fora de <code>[a-zA-Z0-9_. \-]</code>, máximo 128 caracteres.</p>
+<p>3. <strong>Confirmação para operações destrutivas</strong> — <code>iniciar_app</code>, <code>parar_app</code> e</p>
+<p>   qualquer escrita em disco exigem confirmação explícita.</p>
+<p>4. <strong>Segredos só no <code>.env</code></strong> — nunca em <code>.env.example</code>, nunca commitado.</p>
+<p>   <em>(O caso do <code>boicontrol</code> na seção 3 é exatamente o que não pode acontecer.)</em></p>
+<p>5. <strong>Validação de origem</strong> — POST só aceita requisições da própria origem.</p>
+<p>   Sem CORS <code>*</code>.</p>
+<p>6. <strong>Sessão em cookie httpOnly</strong> + rate limit no login.</p>
+<hr>
+<h2>12. Fases de construção</h2>
+<table><thead><tr><th>Fase</th><th>Entrega</th><th>Como saber que funcionou</th></tr></thead><tbody>
+<tr><td><strong>0</strong></td><td>Plano + PDF + estrutura de pastas</td><td>Você lê e aprova</td></tr>
+<tr><td><strong>1</strong></td><td>Banco + login</td><td>Criar conta, entrar, sair</td></tr>
+<tr><td><strong>2</strong></td><td>Registro dos 5 apps + scanner</td><td>Catálogo mostra os 5 corretamente</td></tr>
+<tr><td><strong>3</strong></td><td>Gerenciador de processos</td><td>Iniciar e parar o BoiControl pela API</td></tr>
+<tr><td><strong>4</strong></td><td>Dashboard + menu + seções</td><td>Navegar entre os 5 apps na interface</td></tr>
+<tr><td><strong>5</strong></td><td>Agente TypeScript</td><td>Perguntar "quais apps estão rodando?" e ter resposta</td></tr>
+<tr><td><strong>6</strong></td><td>Agente Python (espelho)</td><td>Mesma pergunta, mesma resposta</td></tr>
+<tr><td><strong>7</strong></td><td>Sync MySQL</td><td>Dados aparecem no phpMyAdmin da Hostinger</td></tr>
+<tr><td><strong>8</strong></td><td>Deploy SSH</td><td><code>vitrinedeapps.cloud</code> no ar</td></tr>
+</tbody></table>
+<hr>
+<h2>13. O que vem depois do MVP</h2>
+<ul>
+<li><strong>Redirecionamentos entre apps</strong> (o objetivo original): clicar num app e cair</li>
+</ul>
+<p>  direto na rota certa de outro, com sessão compartilhada</p>
+<ul>
+<li>Automações agendadas (Windows Task Scheduler)</li>
+<li>Notificações quando um app cai</li>
+<li>Métricas de uso: qual projeto você mais abre</li>
+<li>Deploy automático: push no GitHub → build → rsync para a Hostinger</li>
+</ul>
+<hr>
+<h2>14. Riscos conhecidos</h2>
+<table><thead><tr><th>Risco</th><th>Mitigação</th></tr></thead><tbody>
+<tr><td>SQLite é padrão novo no seu portfólio</td><td><code>better-sqlite3</code>, síncrono e simples</td></tr>
+<tr><td>Estante de Ebooks mora no drive <code>F:</code></td><td>Detectar drive ausente e marcar como indisponível</td></tr>
+<tr><td>Estante tem dois repositórios</td><td>Você decide qual é o oficial</td></tr>
+<tr><td>Chave do Supabase do BoiControl exposta</td><td>Rotacionar — ver seção 3</td></tr>
+<tr><td>Senha do MySQL exposta em print</td><td>Trocar no hPanel após a Fase 7</td></tr>
+<tr><td>Matar processo no Windows é traiçoeiro</td><td><code>taskkill /PID /T /F</code> mata a árvore inteira</td></tr>
+<tr><td>Portas em conflito</td><td>Verificar antes de subir e avisar</td></tr>
+<tr><td>Mestre do PC não roda hospedado</td><td>No site público vira página de download</td></tr>
+</tbody></table></body></html>

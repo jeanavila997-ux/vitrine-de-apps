@@ -1,0 +1,42 @@
+{
+  "name": "vitrine-de-apps",
+  "version": "0.1.0",
+  "description": "Gerenciador e orquestrador dos projetos: vitrine, controle de processos e agente",
+  "homepage": "https://vitrinedeapps.cloud",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "db:init": "node server/scripts/init-db.js",
+    "db:init:mysql": "node server/scripts/init-db.js --mysql",
+    "db:seed": "node server/scripts/seed-apps.js",
+    "db:sync": "node server/scripts/sync.js",
+    "db:check": "node server/scripts/verificar-mysql.js",
+    "test": "node --test server/test/",
+    "check": "node --check server/index.js && node --check server/db.js && node --check server/auth.js",
+    "plano:pdf": "node scripts/md2html.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "better-sqlite3": "^12.4.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.2.0",
+    "mysql2": "^3.15.3"
+  },
+  "keywords": [
+    "orquestrador",
+    "vitrine",
+    "gerenciador-de-projetos"
+  ],
+  "author": "Jean Avila",
+  "license": "UNLICENSED",
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
+  }
+}

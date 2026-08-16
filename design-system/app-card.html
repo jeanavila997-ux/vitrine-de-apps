@@ -1,0 +1,203 @@
+<!-- @dsCard group="Componentes" name="AppCard" subtitle="Card de app — 5 identidades, 4 estados, variante compacta" -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>AppCard — Vitrine de Apps</title>
+<style>
+:root{--vd-bg:#16181d;--vd-surface:#1e2128;--vd-surface-hover:#262a33;--vd-border:#2f343d;--vd-border-strong:#3d434e;--vd-text:#e6e8ec;--vd-text-muted:#9aa1ad;--vd-text-faint:#6b7280;--vd-accent:#cc785c;--vd-online:#4ade80;--vd-offline:#6b7280;--vd-warning:#fbbf24;--vd-error:#f87171;--vd-font:'Segoe UI',system-ui,sans-serif;--vd-font-mono:'Cascadia Code',Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--vd-bg);color:var(--vd-text);font-family:var(--vd-font);padding:32px;font-size:14px}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.09em;color:var(--vd-text-muted);margin:32px 0 14px;font-weight:600}
+h2:first-of-type{margin-top:0}
+.note{font-size:12px;color:var(--vd-text-faint);margin:10px 0 0;max-width:640px;line-height:1.6}
+code{font-family:var(--vd-font-mono);font-size:11px;background:#121419;padding:2px 6px;border-radius:4px;color:#cc785c}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:14px;max-width:900px}
+
+/* ================= AppCard ================= */
+.vd-appcard{
+  --app-color: var(--vd-accent);
+  position:relative;background:var(--vd-surface);border:1px solid var(--vd-border);
+  border-radius:12px;padding:16px;transition:border-color 140ms ease,background 140ms ease;
+  cursor:pointer;overflow:hidden;
+}
+.vd-appcard::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--app-color);
+  opacity:.85;
+}
+.vd-appcard:hover{background:var(--vd-surface-hover);border-color:var(--vd-border-strong)}
+
+.vd-appcard__head{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.vd-appcard__icon{
+  width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:19px;
+  background:color-mix(in srgb, var(--app-color) 16%, transparent);
+  border:1px solid color-mix(in srgb, var(--app-color) 32%, transparent);
+  flex-shrink:0;
+}
+.vd-appcard__titles{flex:1;min-width:0}
+.vd-appcard__name{font-size:15px;font-weight:600;margin:0 0 2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vd-appcard__stack{font-size:12px;color:var(--vd-text-faint);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.vd-appcard__desc{font-size:12.5px;color:var(--vd-text-muted);line-height:1.5;margin:0 0 13px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:38px}
+
+.vd-appcard__foot{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding-top:11px;border-top:1px solid var(--vd-border)}
+.vd-appcard__port{font-family:var(--vd-font-mono);font-size:11px;color:var(--vd-text-faint)}
+
+/* estado: indisponível (drive/pasta ausente) */
+.vd-appcard--unavailable{opacity:.55}
+.vd-appcard--unavailable::before{opacity:.3}
+.vd-appcard--unavailable .vd-appcard__icon{filter:grayscale(1)}
+
+/* estado: em execução — realce sutil */
+.vd-appcard--running{border-color:color-mix(in srgb, var(--vd-online) 28%, var(--vd-border))}
+
+/* identidades */
+.vd-appcard--multichat{--app-color:#8b5cf6}
+.vd-appcard--estante{--app-color:#f59e0b}
+.vd-appcard--bovinos{--app-color:#10b981}
+.vd-appcard--mestrepc{--app-color:#3b82f6}
+.vd-appcard--boicontrol{--app-color:#ef4444}
+
+/* variante compacta — lista lateral */
+.vd-appcard--compact{padding:11px 13px;border-radius:8px}
+.vd-appcard--compact .vd-appcard__head{margin-bottom:0;align-items:center}
+.vd-appcard--compact .vd-appcard__icon{width:30px;height:30px;font-size:15px;border-radius:7px}
+.vd-appcard--compact .vd-appcard__desc,.vd-appcard--compact .vd-appcard__foot{display:none}
+.vd-appcard--compact .vd-appcard__name{font-size:13.5px}
+
+/* ---- StatusBadge embutido ---- */
+.vd-status{display:inline-flex;align-items:center;gap:5px;padding:2px 7px 2px 6px;border-radius:999px;font-size:11px;font-weight:500;white-space:nowrap}
+.vd-status .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.vd-status--online{background:rgba(74,222,128,.14);color:#4ade80}
+.vd-status--online .dot{background:#4ade80}
+.vd-status--offline{background:rgba(107,114,128,.14);color:#9aa1ad}
+.vd-status--offline .dot{background:#6b7280}
+.vd-status--starting{background:rgba(251,191,36,.14);color:#fbbf24}
+.vd-status--starting .dot{background:#fbbf24;animation:vd-pulse 1.1s ease-in-out infinite}
+.vd-status--error{background:rgba(248,113,113,.14);color:#f87171}
+.vd-status--error .dot{background:#f87171}
+.vd-status--unavailable{background:rgba(107,114,128,.09);color:#6b7280;border:1px dashed #3d434e}
+.vd-status--unavailable .dot{background:transparent;border:1.5px solid #6b7280}
+@keyframes vd-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.82)}}
+</style>
+</head>
+<body>
+
+<h2>Os 5 apps — estados reais</h2>
+<div class="grid">
+
+  <article class="vd-appcard vd-appcard--multichat vd-appcard--running">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">💬</div>
+      <div class="vd-appcard__titles">
+        <h3 class="vd-appcard__name">MULT-CHAT-HUB</h3>
+        <p class="vd-appcard__stack">Vite · React · Electron · Next.js</p>
+      </div>
+    </div>
+    <p class="vd-appcard__desc">Hub de chat com IA. Monorepo pnpm com versão desktop (lite) e versão web (cloud).</p>
+    <div class="vd-appcard__foot">
+      <span class="vd-status vd-status--online"><span class="dot"></span>online</span>
+      <span class="vd-appcard__port">:3001</span>
+    </div>
+  </article>
+
+  <article class="vd-appcard vd-appcard--estante">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">📚</div>
+      <div class="vd-appcard__titles">
+        <h3 class="vd-appcard__name">Estante de Ebooks</h3>
+        <p class="vd-appcard__stack">Electron · React · Fastify · SQLite</p>
+      </div>
+    </div>
+    <p class="vd-appcard__desc">Catalogação e leitura de ebooks em PDF, HTML e Markdown, com área administrativa.</p>
+    <div class="vd-appcard__foot">
+      <span class="vd-status vd-status--offline"><span class="dot"></span>offline</span>
+      <span class="vd-appcard__port">:5173</span>
+    </div>
+  </article>
+
+  <article class="vd-appcard vd-appcard--bovinos">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">🐂</div>
+      <div class="vd-appcard__titles">
+        <h3 class="vd-appcard__name">Cruzamento Bovinos</h3>
+        <p class="vd-appcard__stack">React 19 · Vite · Tailwind · Supabase</p>
+      </div>
+    </div>
+    <p class="vd-appcard__desc">Planejamento de cruzamento genético de bovinos, com geração de relatórios em PDF.</p>
+    <div class="vd-appcard__foot">
+      <span class="vd-status vd-status--starting"><span class="dot"></span>iniciando</span>
+      <span class="vd-appcard__port">:5173</span>
+    </div>
+  </article>
+
+  <article class="vd-appcard vd-appcard--mestrepc">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">🖥️</div>
+      <div class="vd-appcard__titles">
+        <h3 class="vd-appcard__name">Mestre do PC V10</h3>
+        <p class="vd-appcard__stack">Node · PowerShell · MCP · Ollama</p>
+      </div>
+    </div>
+    <p class="vd-appcard__desc">Diagnóstico e manutenção do Windows, com servidor MCP e integração com Ollama.</p>
+    <div class="vd-appcard__foot">
+      <span class="vd-status vd-status--offline"><span class="dot"></span>offline</span>
+      <span class="vd-appcard__port">:7777</span>
+    </div>
+  </article>
+
+  <article class="vd-appcard vd-appcard--boicontrol">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">🐄</div>
+      <div class="vd-appcard__titles">
+        <h3 class="vd-appcard__name">BoiControl</h3>
+        <p class="vd-appcard__stack">React · Vite · shadcn · PWA</p>
+      </div>
+    </div>
+    <p class="vd-appcard__desc">Controle de rebanho com funcionamento offline via IndexedDB e exportação em Excel.</p>
+    <div class="vd-appcard__foot">
+      <span class="vd-status vd-status--error"><span class="dot"></span>porta 8080 ocupada</span>
+      <span class="vd-appcard__port">:8080</span>
+    </div>
+  </article>
+
+  <article class="vd-appcard vd-appcard--estante vd-appcard--unavailable">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">📚</div>
+      <div class="vd-appcard__titles">
+        <h3 class="vd-appcard__name">Estante de Ebooks</h3>
+        <p class="vd-appcard__stack">drive F: desconectado</p>
+      </div>
+    </div>
+    <p class="vd-appcard__desc">A pasta do app não foi encontrada. Conecte o drive F: para que a Vitrine possa gerenciá-lo.</p>
+    <div class="vd-appcard__foot">
+      <span class="vd-status vd-status--unavailable"><span class="dot"></span>indisponível</span>
+      <span class="vd-appcard__port">F:\…</span>
+    </div>
+  </article>
+
+</div>
+<p class="note">O último card mostra o estado <code>indisponível</code>: a Estante mora em <code>F:\DOWNLOADS</code>, então precisa de tratamento quando o drive não está montado. O realce verde na borda do MULT-CHAT-HUB é a variante <code>--running</code>.</p>
+
+<h2>Variante compacta — usada na lista lateral e em telas estreitas</h2>
+<div class="grid" style="max-width:560px">
+  <article class="vd-appcard vd-appcard--compact vd-appcard--multichat vd-appcard--running">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">💬</div>
+      <div class="vd-appcard__titles"><h3 class="vd-appcard__name">MULT-CHAT-HUB</h3></div>
+      <span class="vd-status vd-status--online"><span class="dot"></span>online</span>
+    </div>
+  </article>
+  <article class="vd-appcard vd-appcard--compact vd-appcard--boicontrol">
+    <div class="vd-appcard__head">
+      <div class="vd-appcard__icon">🐄</div>
+      <div class="vd-appcard__titles"><h3 class="vd-appcard__name">BoiControl</h3></div>
+      <span class="vd-status vd-status--offline"><span class="dot"></span>offline</span>
+    </div>
+  </article>
+</div>
+
+</body>
+</html>
