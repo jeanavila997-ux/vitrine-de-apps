@@ -133,6 +133,42 @@ export function buscarApp(slug) {
   return abrirSqlite().prepare('SELECT * FROM v_apps_com_status WHERE slug = ?').get(slug);
 }
 
+// ---- Versões que respeitam o modo ----
+// Local lê do SQLite; hospedado lê do MariaDB, que é para onde o catálogo
+// é sincronizado. Mesma forma de resultado nos dois casos.
+
+export async function listarAppsPorModo() {
+  if (config.modo === 'local') return listarApps();
+
+  const pool = poolMySql();
+  if (!pool) throw new Error('MySQL não configurado em modo hospedado');
+  const [linhas] = await pool.query('SELECT * FROM v_apps_com_status ORDER BY ordem');
+  return linhas;
+}
+
+export async function buscarAppPorModo(slug) {
+  if (config.modo === 'local') return buscarApp(slug);
+
+  const pool = poolMySql();
+  if (!pool) throw new Error('MySQL não configurado em modo hospedado');
+  const [linhas] = await pool.query('SELECT * FROM v_apps_com_status WHERE slug = ?', [slug]);
+  return linhas[0] ?? null;
+}
+
+export async function atividadeRecentePorModo(limite = 20) {
+  if (config.modo === 'local') return atividadeRecente(limite);
+
+  const pool = poolMySql();
+  if (!pool) return [];
+  const [linhas] = await pool.query(
+    `SELECT e.*, a.nome AS app_nome, a.icone AS app_icone, a.slug AS app_slug
+     FROM execucoes e JOIN apps a ON a.id = e.app_id
+     ORDER BY e.criado_em DESC LIMIT ?`,
+    [limite]
+  );
+  return linhas;
+}
+
 export function registrarStatus({ appId, estado, pid = null, portaEfetiva = null, mensagem = null }) {
   return abrirSqlite()
     .prepare(

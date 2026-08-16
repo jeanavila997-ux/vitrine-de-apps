@@ -116,9 +116,13 @@ git push
 <p>abre o código. Funciona com todos os 5, inclusive o Mestre do PC (que só roda</p>
 <p>em <code>127.0.0.1</code>) e os Electron.</p>
 <h3>Modo Público (vitrinedeapps.cloud)</h3>
-<p>O servidor da Hostinger não tem como iniciar processos na sua máquina. Lá a</p>
-<p>vitrine é um <strong>portal</strong>: mostra cada app, o que faz, prints, e leva para onde</p>
-<p>o app realmente está.</p>
+<p>A hospedagem <strong>roda Node.js e Express</strong> (versões 18 a 24, com npm/yarn/pnpm),</p>
+<p>então o mesmo servidor da Vitrine roda lá — não precisa ser um site estático</p>
+<p>separado. Login, catálogo e MariaDB funcionam igual.</p>
+<p>A única coisa que não atravessa é o <strong>controle de processos</strong>: o servidor da</p>
+<p>Hostinger não tem como iniciar um app na sua máquina. Então, no modo público,</p>
+<p>as ações de iniciar/parar ficam desabilitadas e cada app leva para onde ele</p>
+<p>realmente está.</p>
 <table><thead><tr><th>App</th><th>Como aparece no site público</th></tr></thead><tbody>
 <tr><td>MULT-CHAT-HUB</td><td>Link para a versão cloud (Next.js)</td></tr>
 <tr><td>Estante de Ebooks</td><td>Página do app + download do instalador</td></tr>
@@ -146,6 +150,20 @@ vitrinedeapps.cloud/apps/mult-chat/     → redireciona para o cloud
 <h3>Acesso SSH</h3>
 <p>Habilitado no hPanel (Avançado → Acesso SSH). Host, porta e usuário ficam em</p>
 <p><code>.env</code>: <code>SSH_HOST</code>, <code>SSH_PORT</code>, <code>SSH_USER</code>, <code>SSH_REMOTE_PATH</code>.</p>
+<h3>Recursos da hospedagem</h3>
+<table><thead><tr><th>Recurso</th><th>Disponível</th></tr></thead><tbody>
+<tr><td>Node.js</td><td>18.x, 20.x, 22.x, <strong>24.x</strong></td></tr>
+<tr><td>Backend suportado</td><td><strong>Express</strong>, Fastify, Hono, NestJS, Next.js, Nuxt</td></tr>
+<tr><td>Gerenciadores</td><td>npm, yarn, pnpm</td></tr>
+<tr><td>Disco</td><td>50 GB</td></tr>
+<tr><td>RAM</td><td>3 GB</td></tr>
+<tr><td>CPU</td><td>2 núcleos</td></tr>
+<tr><td>Processos</td><td>120</td></tr>
+<tr><td>Servidor</td><td>Brasil (backups nos EUA)</td></tr>
+<tr><td>Raiz do site</td><td><code>public_html</code></td></tr>
+</tbody></table>
+<p>Node 24 é a mesma versão que roda aqui, então não há divergência de runtime</p>
+<p>entre desenvolvimento e produção. RAM e CPU sobram para o que a Vitrine faz.</p>
 <blockquote><strong>Recomendação:</strong> troque a autenticação por senha por <strong>chave SSH</strong> (o hPanel</blockquote>
 <blockquote>tem a opção "Adicionar chave SSH"). Isso permite deploy automatizado sem senha</blockquote>
 <blockquote>digitada e é bem mais seguro. Eu gero o par de chaves quando você quiser.</blockquote>

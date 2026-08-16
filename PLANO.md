@@ -126,9 +126,14 @@ em `127.0.0.1`) e os Electron.
 
 ### Modo Público (vitrinedeapps.cloud)
 
-O servidor da Hostinger não tem como iniciar processos na sua máquina. Lá a
-vitrine é um **portal**: mostra cada app, o que faz, prints, e leva para onde
-o app realmente está.
+A hospedagem **roda Node.js e Express** (versões 18 a 24, com npm/yarn/pnpm),
+então o mesmo servidor da Vitrine roda lá — não precisa ser um site estático
+separado. Login, catálogo e MariaDB funcionam igual.
+
+A única coisa que não atravessa é o **controle de processos**: o servidor da
+Hostinger não tem como iniciar um app na sua máquina. Então, no modo público,
+as ações de iniciar/parar ficam desabilitadas e cada app leva para onde ele
+realmente está.
 
 | App | Como aparece no site público |
 |---|---|
@@ -166,6 +171,23 @@ todos em `.env` (git-ignorado) — ver `.env.example` para as chaves esperadas:
 
 Habilitado no hPanel (Avançado → Acesso SSH). Host, porta e usuário ficam em
 `.env`: `SSH_HOST`, `SSH_PORT`, `SSH_USER`, `SSH_REMOTE_PATH`.
+
+### Recursos da hospedagem
+
+| Recurso | Disponível |
+|---|---|
+| Node.js | 18.x, 20.x, 22.x, **24.x** |
+| Backend suportado | **Express**, Fastify, Hono, NestJS, Next.js, Nuxt |
+| Gerenciadores | npm, yarn, pnpm |
+| Disco | 50 GB |
+| RAM | 3 GB |
+| CPU | 2 núcleos |
+| Processos | 120 |
+| Servidor | Brasil (backups nos EUA) |
+| Raiz do site | `public_html` |
+
+Node 24 é a mesma versão que roda aqui, então não há divergência de runtime
+entre desenvolvimento e produção. RAM e CPU sobram para o que a Vitrine faz.
 
 > **Recomendação:** troque a autenticação por senha por **chave SSH** (o hPanel
 > tem a opção "Adicionar chave SSH"). Isso permite deploy automatizado sem senha

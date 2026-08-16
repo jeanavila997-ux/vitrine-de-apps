@@ -6,8 +6,9 @@ import { config, ROOT, origensPermitidas, validarConfig } from './config.js';
 import {
   aplicarSchemaSqlite,
   listarApps,
-  buscarApp,
-  atividadeRecente,
+  listarAppsPorModo,
+  buscarAppPorModo,
+  atividadeRecentePorModo,
   testarMySql,
 } from './db.js';
 
@@ -15,8 +16,11 @@ const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '100kb' }));
 
-// Garante que o banco existe antes de atender qualquer requisição.
-aplicarSchemaSqlite();
+// Em modo local o SQLite é a fonte da verdade e precisa existir.
+// Em modo hospedado os dados vêm do MariaDB — não há SQLite a criar.
+if (config.modo === 'local') {
+  aplicarSchemaSqlite();
+}
 
 // ------------------------------------------------------------
 // Validação de origem — sem CORS `*`, POST só da própria origem.
@@ -41,34 +45,49 @@ app.get('/api/saude', (req, res) => {
   res.json({
     ok: true,
     ambiente: config.ambiente,
+    modo: config.modo,
+    podeControlarProcessos: config.podeControlarProcessos,
     dominio: config.dominio,
     porta: config.porta,
   });
 });
 
-app.get('/api/apps', (req, res) => {
-  const apps = listarApps();
-  const contagem = apps.reduce((acc, a) => {
-    acc[a.estado] = (acc[a.estado] ?? 0) + 1;
-    return acc;
-  }, {});
+app.get('/api/apps', async (req, res, next) => {
+  try {
+    const apps = await listarAppsPorModo();
+    const contagem = apps.reduce((acc, a) => {
+      acc[a.estado] = (acc[a.estado] ?? 0) + 1;
+      return acc;
+    }, {});
 
-  res.json({
-    total: apps.length,
-    contagem,
-    apps,
-  });
+    res.json({
+      total: apps.length,
+      contagem,
+      modo: config.modo,
+      apps,
+    });
+  } catch (erro) {
+    next(erro);
+  }
 });
 
-app.get('/api/apps/:slug', (req, res) => {
-  const app_ = buscarApp(req.params.slug);
-  if (!app_) return res.status(404).json({ erro: 'App não encontrado' });
-  res.json(app_);
+app.get('/api/apps/:slug', async (req, res, next) => {
+  try {
+    const app_ = await buscarAppPorModo(req.params.slug);
+    if (!app_) return res.status(404).json({ erro: 'App não encontrado' });
+    res.json(app_);
+  } catch (erro) {
+    next(erro);
+  }
 });
 
-app.get('/api/atividade', (req, res) => {
-  const limite = Math.min(Number(req.query.limite) || 20, 100);
-  res.json({ itens: atividadeRecente(limite) });
+app.get('/api/atividade', async (req, res, next) => {
+  try {
+    const limite = Math.min(Number(req.query.limite) || 20, 100);
+    res.json({ itens: await atividadeRecentePorModo(limite) });
+  } catch (erro) {
+    next(erro);
+  }
 });
 
 app.get('/api/mysql/status', async (req, res) => {
@@ -82,6 +101,12 @@ app.use(express.static(path.join(ROOT, 'public')));
 
 app.get(/^\/(?!api\/).*/, (req, res) => {
   res.sendFile(path.join(ROOT, 'public', 'index.html'));
+});
+
+// Erros de API viram JSON, nunca stack trace na resposta.
+app.use((erro, req, res, next) => {
+  console.error('Erro:', erro.message);
+  res.status(500).json({ erro: config.producao ? 'Erro interno' : erro.message });
 });
 
 // ------------------------------------------------------------
@@ -98,11 +123,19 @@ if (problemas.length) {
   for (const p of problemas) console.warn(`  - ${p}`);
 }
 
-app.listen(config.porta, '127.0.0.1', () => {
-  const apps = listarApps();
+// Local: só 127.0.0.1, porque o app controla processos da máquina e não deve
+// ficar exposto na rede. Hospedado: a plataforma faz o proxy, então escuta em
+// todas as interfaces e usa a porta que ela definir.
+const host = config.modo === 'local' ? '127.0.0.1' : '0.0.0.0';
+
+app.listen(config.porta, host, () => {
   console.log('');
   console.log('  Vitrine de Apps');
-  console.log(`  http://127.0.0.1:${config.porta}`);
-  console.log(`  ${apps.length} apps no catálogo · domínio ${config.dominio}`);
+  console.log(`  modo ${config.modo} · http://${host}:${config.porta}`);
+  if (config.modo === 'local') {
+    console.log(`  ${listarApps().length} apps no catálogo · ${config.dominio}`);
+  } else {
+    console.log(`  ${config.urlPublica}`);
+  }
   console.log('');
 });

@@ -17,7 +17,8 @@
     "db:sync": "node server/scripts/sync.js",
     "db:check": "node server/scripts/verificar-mysql.js",
     "test": "node --test server/test/",
-    "check": "node --check server/index.js && node --check server/db.js && node --check server/auth.js",
+    "check": "node --check server/index.js && node --check server/db.js && node --check server/config.js",
+    "deploy": "bash deploy/deploy.sh",
     "plano:pdf": "node scripts/md2html.js"
   },
   "dependencies": {

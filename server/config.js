@@ -14,6 +14,16 @@ export const config = {
   ambiente: process.env.NODE_ENV ?? 'development',
   producao: process.env.NODE_ENV === 'production',
 
+  // Local: controla processos de verdade (inicia/para apps na máquina).
+  // Hospedado: o servidor não alcança a máquina do usuário, então o
+  // controle de processos fica desligado e a Vitrine vira portal.
+  get modo() {
+    return process.env.VITRINE_MODO ?? (this.producao ? 'hospedado' : 'local');
+  },
+  get podeControlarProcessos() {
+    return this.modo === 'local';
+  },
+
   // ---- Domínio público do projeto ----
   dominio: 'vitrinedeapps.cloud',
   urlPublica: process.env.PUBLIC_URL ?? 'https://vitrinedeapps.cloud',
