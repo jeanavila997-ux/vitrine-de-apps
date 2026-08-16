@@ -14,6 +14,7 @@ const ESTADOS = {
 };
 
 let estado = { apps: [], contagem: {}, rota: 'dashboard' };
+let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.getItem('vd_ollama_modelo') || '' };
 
 // ------------------------------------------------------------
 // Dados
@@ -37,10 +38,10 @@ const badge = (est) =>
 function cardApp(app) {
   const acao =
     app.estado === 'online'
-      ? `<button class="vd-btn vd-btn--sm vd-btn--stop" disabled>■ Parar</button>`
+      ? `<button class="vd-btn vd-btn--sm vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
       : app.estado === 'indisponivel'
         ? `<span class="vd-appcard__port">${esc(app.caminho.slice(0, 22))}…</span>`
-        : `<button class="vd-btn vd-btn--sm vd-btn--start" disabled>▶ Iniciar</button>`;
+        : `<button class="vd-btn vd-btn--sm vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`;
 
   return `
     <article class="vd-appcard vd-appcard--${app.estado}" style="--app-color:${esc(app.cor ?? '#cc785c')}" data-slug="${esc(app.slug)}">
@@ -148,7 +149,13 @@ function telaApp(slug) {
       </div>
       <div class="vd-apphero__actions">
         ${app.url_local ? `<a class="vd-btn vd-btn--secondary" href="${esc(app.url_local)}" target="_blank" rel="noopener">Abrir app</a>` : ''}
-        <button class="vd-btn vd-btn--start" disabled>▶ Iniciar</button>
+        ${
+          app.estado === 'online'
+            ? `<button class="vd-btn vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
+            : app.estado === 'indisponivel'
+              ? ''
+              : `<button class="vd-btn vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`
+        }
       </div>
     </div>
 
@@ -195,6 +202,112 @@ function telaEmBreve(titulo, texto) {
 }
 
 // ------------------------------------------------------------
+// Agente / Chat
+// ------------------------------------------------------------
+function renderizarMensagens() {
+  if (!chat.mensagens.length) {
+    return `<div class="vd-chat__empty">
+      <div class="vd-chat__empty-icon">🤖</div>
+      <strong>Agente da Vitrine</strong>
+      <p>Pergunte sobre seus apps ou use comandos como <code>listar apps</code>, <code>status mestre-do-pc</code> ou <code>ajuda</code>.</p>
+    </div>`;
+  }
+  return chat.mensagens
+    .map(
+      (m) => `
+    <div class="vd-chat__msg vd-chat__msg--${m.papel}">
+      <div class="vd-chat__bubble">
+        <div class="vd-chat__meta">${m.papel === 'user' ? 'Você' : 'Agente'} · ${esc((m.criado_em ?? '').slice(11, 16))}</div>
+        <div class="vd-chat__text">${esc(m.conteudo).replace(/\n/g, '<br>')}</div>
+      </div>
+    </div>`
+    )
+    .join('');
+}
+
+function telaAgente() {
+  const opcoesModelos = chat.modelos.length
+    ? chat.modelos.map((m) => `<option value="${esc(m.name)}" ${chat.modelo === m.name ? 'selected' : ''}>${esc(m.name)}</option>`).join('')
+    : `<option value="">Carregando modelos…</option>`;
+
+  return `
+    <div class="vd-chat">
+      <div class="vd-chat__header">
+        <div>
+          <h2 class="vd-chat__title">Agente da Vitrine</h2>
+          <span class="vd-chat__subtitle">Chat e comandos CLI</span>
+        </div>
+        <div class="vd-chat__controls">
+          <select id="chat-modelo" class="vd-chat__select" title="Modelo Ollama">
+            ${opcoesModelos}
+          </select>
+          <span class="vd-chat__badge">Ollama</span>
+        </div>
+      </div>
+      <div class="vd-chat__messages" id="chat-messages">${renderizarMensagens()}</div>
+      <form class="vd-chat__input" id="chat-form">
+        <input type="text" id="chat-texto" class="vd-chat__field" placeholder="Digite uma mensagem ou comando…" autocomplete="off" ${chat.enviando ? 'disabled' : ''}>
+        <button type="submit" class="vd-btn vd-btn--primary" ${chat.enviando ? 'disabled' : ''}>${chat.enviando ? '…' : 'Enviar'}</button>
+      </form>
+    </div>`;
+}
+
+async function carregarChat() {
+  try {
+    const [resHist, resModelos] = await Promise.all([
+      fetch('/api/chat/historico?limite=100'),
+      fetch('/api/ollama/modelos'),
+    ]);
+    const dadosHist = await resHist.json();
+    const dadosModelos = await resModelos.json();
+    chat.mensagens = dadosHist.mensagens || [];
+    chat.modelos = dadosModelos.modelos || [];
+    if (!chat.modelo && dadosModelos.modeloPadrao) {
+      chat.modelo = dadosModelos.modeloPadrao;
+    }
+  } catch (erro) {
+    console.error('Falha ao carregar chat:', erro);
+  }
+}
+
+async function enviarMensagem(texto) {
+  if (!texto.trim() || chat.enviando) return;
+  chat.enviando = true;
+  const modelo = chat.modelo || '';
+
+  // Otimisticamente adiciona a mensagem do usuário.
+  chat.mensagens.push({ papel: 'user', conteudo: texto.trim(), criado_em: new Date().toISOString() });
+  renderizarTelaAgente();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensagem: texto.trim(), modelo }),
+    });
+    const dados = await res.json();
+    if (!res.ok) throw new Error(dados.erro || 'Erro no servidor');
+    chat.mensagens.push({ papel: 'assistant', conteudo: dados.resposta, criado_em: new Date().toISOString() });
+  } catch (erro) {
+    chat.mensagens.push({ papel: 'assistant', conteudo: `Erro: ${erro.message}`, criado_em: new Date().toISOString() });
+  } finally {
+    chat.enviando = false;
+    renderizarTelaAgente();
+  }
+}
+
+function renderizarTelaAgente() {
+  $('#conteudo').innerHTML = telaAgente();
+  const msgs = $('#chat-messages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  const input = $('#chat-texto');
+  if (input && !chat.enviando) {
+    input.focus();
+    input.value = '';
+  }
+}
+
+// ------------------------------------------------------------
 // Navegação
 // ------------------------------------------------------------
 function montarMenuApps() {
@@ -228,11 +341,14 @@ function navegar(rota) {
     $('#titulo').textContent = app?.nome ?? 'Aplicativo';
     $('#subtitulo').textContent = '· Aplicativos';
     $('#conteudo').innerHTML = telaApp(slug);
+  } else if (rota === 'agente') {
+    $('#titulo').textContent = 'Agente';
+    $('#subtitulo').textContent = '· Chat e comandos CLI';
+    renderizarTelaAgente();
   } else {
     const titulos = {
       automacoes: ['Automações', 'Regras "quando X acontecer, faça Y". Chega na Fase 3 do plano.'],
       integracoes: ['Integrações', 'Ligações e redirecionamentos entre os seus apps. Chega depois do MVP.'],
-      agente: ['Agente', 'O agente Claude que responde sobre os projetos. Chega nas Fases 5 e 6.'],
       logs: ['Logs', 'Auditoria completa de execuções e ações do agente. Chega na Fase 3.'],
     };
     const [titulo, texto] = titulos[rota] ?? ['—', ''];
@@ -242,7 +358,46 @@ function navegar(rota) {
   }
 }
 
+async function executarAcaoApp(acao, slug) {
+  const app = estado.apps.find((a) => a.slug === slug);
+  if (!app) return;
+
+  const botao = document.querySelector(`[data-acao="${acao}"][data-slug="${slug}"]`);
+  if (botao) {
+    botao.disabled = true;
+    botao.textContent = '…';
+  }
+
+  try {
+    const res = await fetch(`/api/apps/${encodeURIComponent(slug)}/${acao}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const dados = await res.json();
+
+    if (!res.ok) {
+      alert(dados.erro || dados.mensagem || `Falha ao ${acao} ${app.nome}.`);
+    }
+  } catch (erro) {
+    alert(`Erro ao ${acao} ${app.nome}: ${erro.message}`);
+  } finally {
+    // Recarrega o catálogo para refletir o novo estado.
+    await carregar();
+    montarMenuApps();
+    navegar(estado.rota);
+  }
+}
+
 document.addEventListener('click', (ev) => {
+  // Botões de iniciar/parar têm prioridade sobre a navegação do card.
+  const botao = ev.target.closest('[data-acao]');
+  if (botao) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    executarAcaoApp(botao.dataset.acao, botao.dataset.slug);
+    return;
+  }
+
   const item = ev.target.closest('.vd-navitem');
   if (item?.dataset.rota) {
     navegar(item.dataset.rota);
@@ -250,6 +405,21 @@ document.addEventListener('click', (ev) => {
   }
   const card = ev.target.closest('.vd-appcard');
   if (card?.dataset.slug) navegar(`app:${card.dataset.slug}`);
+});
+
+document.addEventListener('submit', (ev) => {
+  if (ev.target?.id === 'chat-form') {
+    ev.preventDefault();
+    const input = $('#chat-texto');
+    if (input) enviarMensagem(input.value);
+  }
+});
+
+document.addEventListener('change', (ev) => {
+  if (ev.target?.id === 'chat-modelo') {
+    chat.modelo = ev.target.value;
+    localStorage.setItem('vd_ollama_modelo', chat.modelo);
+  }
 });
 
 $('#btn-atualizar').addEventListener('click', async () => {
@@ -263,6 +433,7 @@ $('#btn-atualizar').addEventListener('click', async () => {
 // ------------------------------------------------------------
 try {
   await carregar();
+  await carregarChat();
   montarMenuApps();
   navegar('dashboard');
 

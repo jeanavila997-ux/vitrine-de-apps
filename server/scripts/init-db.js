@@ -4,7 +4,7 @@
 //   npm run db:init:mysql    → MariaDB da Hostinger (credenciais em .env)
 //
 // Ambos são idempotentes: rodar de novo não apaga nada.
-import { aplicarSchemaSqlite, aplicarSchemaMySql, testarMySql, fecharSqlite, fecharMySql } from '../db.js';
+import { abrirSqlite, aplicarSchemaSqlite, aplicarSchemaMySql, testarMySql, fecharSqlite, fecharMySql } from '../db.js';
 import { config } from '../config.js';
 
 const usarMysql = process.argv.includes('--mysql');
@@ -23,7 +23,18 @@ const TABELAS_ESPERADAS = [
 async function inicializarSqlite() {
   console.log('SQLite —', config.sqlite.caminho);
 
-  const db = aplicarSchemaSqlite();
+  // Migrações idempotentes precisam rodar ANTES do schema: a view
+  // v_apps_com_status referencia colunas novas, então elas têm que existir
+  // quando o CREATE VIEW for executado.
+  const db = abrirSqlite();
+  const colunasApps = db.prepare(`PRAGMA table_info(apps)`).all().map((c) => c.name);
+  if (!colunasApps.includes('pid_file')) {
+    db.exec(`ALTER TABLE apps ADD COLUMN pid_file TEXT`);
+    console.log('  migração: coluna apps.pid_file adicionada');
+  }
+
+  aplicarSchemaSqlite();
+
   const tabelas = db
     .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
     .all()

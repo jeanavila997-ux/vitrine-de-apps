@@ -19,11 +19,11 @@ const db = abrirSqlite();
 const upsert = db.prepare(`
   INSERT INTO apps (
     slug, nome, descricao, icone, cor, caminho, repositorio, branch,
-    stack, tipo, comando_start, porta, url_local, url_publica,
+    stack, tipo, comando_start, pid_file, porta, url_local, url_publica,
     banco, tem_auth, ordem
   ) VALUES (
     @slug, @nome, @descricao, @icone, @cor, @caminho, @repositorio, @branch,
-    @stack, @tipo, @comando_start, @porta, @url_local, @url_publica,
+    @stack, @tipo, @comando_start, @pid_file, @porta, @url_local, @url_publica,
     @banco, @tem_auth, @ordem
   )
   ON CONFLICT (slug) DO UPDATE SET
@@ -37,6 +37,7 @@ const upsert = db.prepare(`
     stack = excluded.stack,
     tipo = excluded.tipo,
     comando_start = excluded.comando_start,
+    pid_file = excluded.pid_file,
     porta = excluded.porta,
     url_local = excluded.url_local,
     url_publica = excluded.url_publica,
@@ -65,6 +66,7 @@ const gravarTudo = db.transaction((apps) => {
       stack: app.stack ?? null,
       tipo: app.tipo ?? 'web',
       comando_start: app.comando_start ?? null,
+      pid_file: app.pid_file ?? null,
       porta: app.porta ?? null,
       url_local: app.url_local ?? null,
       url_publica: app.url_publica ?? null,

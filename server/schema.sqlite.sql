@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS apps (
   tipo            TEXT    NOT NULL DEFAULT 'web'
                   CHECK (tipo IN ('web', 'desktop', 'servico', 'hibrido')),
   comando_start   TEXT,                       -- chave em allowed-commands.json
+  pid_file        TEXT,                       -- nome do arquivo de PID (apps que se auto-elevam)
   porta           INTEGER,
   url_local       TEXT,
   url_publica     TEXT,
@@ -155,6 +156,26 @@ CREATE INDEX IF NOT EXISTS idx_integracoes_origem ON integracoes (app_origem);
 -- ============================================================
 -- 8. logs_agente — auditoria de tudo que o agente fez
 -- ============================================================
+
+-- ============================================================
+-- 9. chat_mensagens — histórico de conversas com o agente
+-- ============================================================
+CREATE TABLE IF NOT EXISTS chat_mensagens (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  usuario_id    INTEGER,
+  papel         TEXT    NOT NULL DEFAULT 'user'
+                CHECK (papel IN ('user','assistant','system')),
+  conteudo      TEXT    NOT NULL,
+  meta          TEXT,                         -- JSON: modelo, tokens, ferramentas, etc.
+  criado_em     TEXT    NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_chat_mensagens_data ON chat_mensagens (criado_em DESC);
+
+-- ============================================================
+-- 8. logs_agente — auditoria de tudo que o agente fez
+-- ============================================================
 CREATE TABLE IF NOT EXISTS logs_agente (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
   usuario_id    INTEGER,
@@ -190,10 +211,12 @@ END;
 -- ============================================================
 -- Visão auxiliar: catálogo com status
 -- ============================================================
-CREATE VIEW IF NOT EXISTS v_apps_com_status AS
+DROP VIEW IF EXISTS v_apps_com_status;
+CREATE VIEW v_apps_com_status AS
 SELECT
   a.id, a.slug, a.nome, a.descricao, a.icone, a.cor, a.stack, a.tipo,
   a.porta, a.url_local, a.url_publica, a.repositorio, a.caminho, a.ordem,
+  a.comando_start, a.pid_file,
   COALESCE(s.estado, 'offline') AS estado,
   s.pid, s.porta_efetiva, s.mensagem, s.iniciado_em, s.verificado_em
 FROM apps a

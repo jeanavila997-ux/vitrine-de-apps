@@ -73,6 +73,7 @@
       "stack": "Node · PowerShell · MCP · Ollama",
       "tipo": "servico",
       "comando_start": "mestre_start",
+      "pid_file": "MestreDoPC-Launcher.pid",
       "porta": 7777,
       "url_local": "http://127.0.0.1:7777",
       "url_publica": null,

@@ -72,6 +72,20 @@ export const config = {
     apiKey: process.env.ANTHROPIC_API_KEY ?? '',
     habilitado: bool(process.env.AGENT_ENABLED, true),
   },
+
+  // ---- Ollama ----
+  ollama: {
+    get url() {
+      const env = process.env.OLLAMA_API_URL;
+      if (env) return env.replace(/\/+$/, '');
+      return (process.env.OLLAMA_API_KEY ? 'https://ollama.com' : 'http://127.0.0.1:11434');
+    },
+    apiKey: process.env.OLLAMA_API_KEY ?? '',
+    modelo: process.env.OLLAMA_MODEL ?? 'qwen2.5-coder:3b-instruct',
+    numCtx: num(process.env.OLLAMA_NUM_CTX, 8192),
+    temperature: parseFloat(process.env.OLLAMA_TEMPERATURE ?? '0.7'),
+    habilitado: bool(process.env.OLLAMA_ENABLED, true),
+  },
 };
 
 /** Origens aceitas em requisições POST — nada de CORS `*`. */

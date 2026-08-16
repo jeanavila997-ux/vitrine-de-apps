@@ -213,3 +213,38 @@ export function atividadeRecente(limite = 20) {
     )
     .all(limite);
 }
+
+// ============================================================
+// Chat com o agente
+// ============================================================
+
+export function salvarMensagemChat({ usuarioId = null, papel, conteudo, meta = null }) {
+  return abrirSqlite()
+    .prepare(
+      `INSERT INTO chat_mensagens (usuario_id, papel, conteudo, meta, criado_em)
+       VALUES (?, ?, ?, ?, datetime('now'))`
+    )
+    .run(usuarioId, papel, conteudo, meta ? JSON.stringify(meta) : null);
+}
+
+export function listarMensagensChat({ usuarioId = null, limite = 100, antesDe = null } = {}) {
+  const db = abrirSqlite();
+  let sql = `SELECT id, usuario_id, papel, conteudo, meta, criado_em
+             FROM chat_mensagens`;
+  const where = [];
+  const params = [];
+
+  if (usuarioId !== null) {
+    where.push('usuario_id = ?');
+    params.push(usuarioId);
+  }
+  if (antesDe) {
+    where.push('criado_em < ?');
+    params.push(antesDe);
+  }
+  if (where.length) sql += ' WHERE ' + where.join(' AND ');
+  sql += ' ORDER BY criado_em DESC LIMIT ?';
+  params.push(limite);
+
+  return db.prepare(sql).all(...params).reverse();
+}

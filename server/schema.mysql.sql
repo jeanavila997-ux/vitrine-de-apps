@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS apps (
   stack         VARCHAR(255) NULL,
   tipo          ENUM('web','desktop','servico','hibrido') NOT NULL DEFAULT 'web',
   comando_start VARCHAR(120) NULL,
+  pid_file      VARCHAR(120) NULL,
   porta         SMALLINT UNSIGNED NULL,
   url_local     VARCHAR(255) NULL,
   url_publica   VARCHAR(255) NULL,
@@ -184,6 +185,7 @@ CREATE OR REPLACE VIEW v_apps_com_status AS
 SELECT
   a.id, a.slug, a.nome, a.descricao, a.icone, a.cor, a.stack, a.tipo,
   a.porta, a.url_local, a.url_publica, a.repositorio, a.caminho, a.ordem,
+  a.comando_start, a.pid_file,
   COALESCE(s.estado, 'offline') AS estado,
   s.pid, s.porta_efetiva, s.mensagem, s.iniciado_em, s.verificado_em
 FROM apps a

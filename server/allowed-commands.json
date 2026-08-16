@@ -1,0 +1,30 @@
+{
+  "_comentario": "Allowlist de comandos executáveis da Vitrine. Cada chave corresponde ao campo comando_start do apps-registry.json. Nada de comando livre ou gerado por IA — só o que está aqui pode ser executado. O placeholder {caminho} é substituído pelo campo caminho do app em tempo de execução.",
+  "comandos": {
+    "mult_chat_dev_lite": {
+      "executavel": "pnpm",
+      "argumentos": ["run", "dev:lite"],
+      "descricao": "Sobe o frontend lite do MULT-CHAT-HUB na porta 3001"
+    },
+    "mestre_start": {
+      "executavel": "powershell.exe",
+      "argumentos": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "{caminho}\\start-mestre-v10.ps1"],
+      "descricao": "Ativa o Mestre do PC (Ollama + Launcher + navegador)"
+    },
+    "estante_dev": {
+      "executavel": "npm",
+      "argumentos": ["run", "dev"],
+      "descricao": "Sobe a Estante de Ebooks"
+    },
+    "bovinos_dev": {
+      "executavel": "npm",
+      "argumentos": ["run", "dev"],
+      "descricao": "Sobe o Cruzamento Bovinos"
+    },
+    "boicontrol_dev": {
+      "executavel": "npm",
+      "argumentos": ["run", "dev"],
+      "descricao": "Sobe o BoiControl"
+    }
+  }
+}

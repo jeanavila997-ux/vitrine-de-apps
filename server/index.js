@@ -13,6 +13,8 @@ import {
   atividadeRecentePorModo,
   testarMySql,
 } from './db.js';
+import { processarMensagem, historicoChat, listarModelosOllama } from './agente.js';
+import { executarAcao, verificarStatus } from './process-manager.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -92,8 +94,95 @@ app.get('/api/atividade', async (req, res, next) => {
   }
 });
 
+// ------------------------------------------------------------
+// Controle de processos (só no modo local)
+// ------------------------------------------------------------
+// Iniciar/parar apps só faz sentido quando a Vitrine roda na própria máquina.
+// No modo hospedado o servidor não alcança os processos do usuário.
+function exigirModoLocal(req, res, next) {
+  if (!config.podeControlarProcessos) {
+    return res.status(403).json({ erro: 'Controle de processos indisponível no modo hospedado.' });
+  }
+  next();
+}
+
+app.post('/api/apps/:slug/iniciar', exigirModoLocal, async (req, res, next) => {
+  try {
+    const app_ = await buscarAppPorModo(req.params.slug);
+    if (!app_) return res.status(404).json({ erro: 'App não encontrado' });
+
+    const resultado = await executarAcao({ app: app_, acao: 'iniciar', origem: 'ui' });
+    res.status(resultado.ok ? 200 : 409).json(resultado);
+  } catch (erro) {
+    next(erro);
+  }
+});
+
+app.post('/api/apps/:slug/parar', exigirModoLocal, async (req, res, next) => {
+  try {
+    const app_ = await buscarAppPorModo(req.params.slug);
+    if (!app_) return res.status(404).json({ erro: 'App não encontrado' });
+
+    const resultado = await executarAcao({ app: app_, acao: 'parar', origem: 'ui' });
+    res.status(resultado.ok ? 200 : 409).json(resultado);
+  } catch (erro) {
+    next(erro);
+  }
+});
+
+app.get('/api/apps/:slug/status', async (req, res, next) => {
+  try {
+    const app_ = await buscarAppPorModo(req.params.slug);
+    if (!app_) return res.status(404).json({ erro: 'App não encontrado' });
+
+    if (!config.podeControlarProcessos) {
+      return res.json({ slug: app_.slug, estado: app_.estado, pid: app_.pid });
+    }
+
+    const status = await verificarStatus(app_);
+    res.json({ slug: app_.slug, estado: status.online ? 'online' : 'offline', pid: status.pid });
+  } catch (erro) {
+    next(erro);
+  }
+});
+
+// ------------------------------------------------------------
+// Chat com o agente
+// ------------------------------------------------------------
+app.get('/api/chat/historico', async (req, res, next) => {
+  try {
+    const limite = Math.min(Number(req.query.limite) || 100, 200);
+    const mensagens = historicoChat({ limite });
+    res.json({ mensagens });
+  } catch (erro) {
+    next(erro);
+  }
+});
+
+app.post('/api/chat', async (req, res, next) => {
+  try {
+    const { mensagem, modelo } = req.body || {};
+    if (!mensagem || typeof mensagem !== 'string') {
+      return res.status(400).json({ erro: 'Campo "mensagem" é obrigatório e deve ser texto.' });
+    }
+    const resultado = await processarMensagem({ conteudo: mensagem, modelo });
+    res.json({ ok: true, ...resultado });
+  } catch (erro) {
+    next(erro);
+  }
+});
+
 app.get('/api/mysql/status', async (req, res) => {
   res.json(await testarMySql());
+});
+
+app.get('/api/ollama/modelos', async (req, res, next) => {
+  try {
+    const modelos = await listarModelosOllama();
+    res.json({ ok: true, url: config.ollama.url, modeloPadrao: config.ollama.modelo, modelos });
+  } catch (erro) {
+    next(erro);
+  }
 });
 
 /**
