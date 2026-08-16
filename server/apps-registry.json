@@ -101,6 +101,26 @@
       "tem_auth": 0,
       "ordem": 5,
       "observacoes": "ATENÇÃO: o .env deste projeto está commitado em repositório público. Rotacionar a chave do Supabase."
+    },
+    {
+      "slug": "homeovet",
+      "nome": "HomeoVet",
+      "descricao": "Agentes de IA para busca e ensino em homeopatia veterinária, com filtro de segurança ativo e rastreamento de fontes. Uso estritamente educacional — não diagnostica nem prescreve.",
+      "icone": "🐾",
+      "cor": "#14b8a6",
+      "caminho": "C:\\Users\\Jeanc\\homeovet",
+      "repositorio": "https://github.com/jeanavila997-ux/homeovet",
+      "branch": "main",
+      "stack": "Python 3.7+ · zero dependências obrigatórias (rich opcional)",
+      "tipo": "cli",
+      "comando_start": null,
+      "porta": null,
+      "url_local": null,
+      "url_publica": null,
+      "banco": null,
+      "tem_auth": 0,
+      "ordem": 6,
+      "observacoes": "Scripts Python de terminal (agente_homeopatico.py, tutor_homeopatia_vet.py), sem servidor web nem porta — por isso sem comando_start no processo da Vitrine. Confirmar o caminho local exato; README menciona homeovet_cli.py e index.html que ainda não existem no repositório."
     }
   ]
 }
