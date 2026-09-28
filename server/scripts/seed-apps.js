@@ -1,7 +1,8 @@
 // Popula a tabela `apps` a partir de apps-registry.json.
 //
-//   npm run db:seed             avisa sobre portas duplicadas
-//   npm run db:seed -- --estrito  falha (exit 1) se houver
+//   npm run db:seed               avisa sobre portas duplicadas
+//   npm run db:seed -- --estrito   falha (exit 1) se houver
+//   npm run db:seed -- --registry <caminho>  usa outro arquivo de registry
 //
 // Usa UPSERT por slug: rodar de novo atualiza os dados sem duplicar
 // e sem perder o histórico de execuções, que referencia o id.
@@ -11,8 +12,13 @@ import { abrirSqlite, aplicarSchemaSqlite, fecharSqlite } from '../db.js';
 import { ROOT } from '../config.js';
 import { validarRegistro, formatarAvisos } from '../validar-registry.js';
 
+const caminhoRegistry = (() => {
+  const i = process.argv.indexOf('--registry');
+  return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : null;
+})();
+
 const registro = JSON.parse(
-  fs.readFileSync(path.join(ROOT, 'server', 'apps-registry.json'), 'utf8')
+  fs.readFileSync(caminhoRegistry ?? path.join(ROOT, 'server', 'apps-registry.json'), 'utf8')
 );
 
 const { ok, avisos } = validarRegistro(registro);
