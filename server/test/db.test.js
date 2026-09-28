@@ -112,28 +112,33 @@ test('portasDuplicadas detecta a colisão e ignora apps invisíveis', () => {
 test('db:seed --estrito falha quando o registry tem colisão de portas', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitrine-test-'));
   const dbPath = path.join(dir, 'vitrine.db');
-  const registryPath = path.join(ROOT, 'server', 'apps-registry.json');
-  const original = fs.readFileSync(registryPath, 'utf8');
+  const registryAlterado = path.join(dir, 'apps-registry-estrito.json');
 
   try {
-    const registro = JSON.parse(original);
+    // O seed aceita --registry: o teste nunca toca no arquivo real.
+    const registro = JSON.parse(
+      fs.readFileSync(path.join(ROOT, 'server', 'apps-registry.json'), 'utf8')
+    );
     const boi = registro.apps.find((a) => a.slug === 'cruzamento-bovinos');
     boi.porta = registro.apps.find((a) => a.slug === 'estante-de-ebooks').porta;
-    fs.writeFileSync(registryPath, JSON.stringify(registro, null, 2) + '\n');
+    fs.writeFileSync(registryAlterado, JSON.stringify(registro, null, 2) + '\n');
 
     let falhou = false;
     try {
-      execFileSync(process.execPath, ['server/scripts/seed-apps.js', '--estrito'], {
-        cwd: ROOT,
-        env: { ...process.env, SQLITE_PATH: dbPath },
-        stdio: 'pipe',
-      });
+      execFileSync(
+        process.execPath,
+        ['server/scripts/seed-apps.js', '--estrito', '--registry', registryAlterado],
+        {
+          cwd: ROOT,
+          env: { ...process.env, SQLITE_PATH: dbPath },
+          stdio: 'pipe',
+        }
+      );
     } catch {
       falhou = true;
     }
     assert.ok(falhou, 'seed --estrito deveria ter falhado com portas duplicadas');
   } finally {
-    fs.writeFileSync(registryPath, original);
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
