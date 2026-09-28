@@ -112,7 +112,7 @@
       "repositorio": "https://github.com/jeanavila997-ux/homeovet",
       "branch": "main",
       "stack": "Python 3.7+ · zero dependências obrigatórias (rich opcional)",
-      "tipo": "cli",
+      "tipo": "desktop",
       "comando_start": null,
       "porta": null,
       "url_local": null,
