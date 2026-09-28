@@ -85,6 +85,17 @@ Escolhidas fora das faixas que já colidem no ambiente do usuário: a `3000` é
 disputada por três projetos e a `5173` por dois. Ao adicionar qualquer porta,
 verifique conflito antes.
 
+## Agente — cadeia de backends
+
+O chat do agente tenta os backends em ordem até um responder: **Ollama →
+Dify → Anthropic**. Cada um é opcional; sem credenciais, é pulado.
+
+O Dify (plataforma de agentes/workflows de LLM) mantém o estado da conversa
+no servidor dele: `agente.js` guarda o `conversation_id` entre mensagens e o
+botão de limpar o chat reinicia o thread via `/api/dify/conversa/limpar`.
+Config em `config.dify` (`DIFY_API_URL` com prefixo de versão, `DIFY_API_KEY`
+por app, `DIFY_USER`).
+
 ## Segredos — o repositório é público
 
 - Credenciais só no `.env` (git-ignorado). `.env.example` nunca leva valor real.

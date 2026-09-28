@@ -92,7 +92,7 @@ Fases concluídas: **0** (plano), **1** (banco), **2** (catálogo) e a base da
 
 O que já funciona: dashboard com métricas reais, menu com os 6 apps e status,
 seção individual de cada app, **iniciar/parar apps de verdade** (modo local,
-via allowlist de comandos), agente de chat com Ollama, sincronização com a
-Hostinger e painel de conexões.
+via allowlist de comandos), agente de chat com Ollama, Dify e Anthropic
+(cadeia de fallback), sincronização com a Hostinger e painel de conexões.
 
 O que ainda não: login, automações, integrações e redirecionamentos entre apps.

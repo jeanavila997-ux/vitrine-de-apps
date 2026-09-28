@@ -89,6 +89,49 @@ function detectarComando(texto) {
 }
 
 // ============================================================
+// Dify (plataforma de agentes e workflows)
+// ============================================================
+// A API do Dify mantém o estado da conversa no servidor dele: passamos
+// conversation_id para continuar o mesmo thread e guardamos o id retornado.
+let conversaDify = null;
+
+async function chamarDify(mensagens, conteudo) {
+  if (!config.dify.habilitado || !config.dify.url || !config.dify.apiKey) return null;
+  try {
+    const res = await fetch(`${config.dify.url}/chat-messages`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${config.dify.apiKey}`, // chave por app, formato app-…
+      },
+      body: JSON.stringify({
+        inputs: {},
+        query: conteudo,
+        response_mode: 'blocking',
+        conversation_id: conversaDify ?? '',
+        user: config.dify.usuario,
+      }),
+      signal: AbortSignal.timeout(120000),
+    });
+    if (!res.ok) {
+      const erro = await res.text();
+      throw new Error(`Dify respondeu ${res.status}: ${erro}`);
+    }
+    const dados = await res.json();
+    conversaDify = dados.conversation_id ?? conversaDify;
+    return dados.answer ?? 'Resposta vazia do Dify.';
+  } catch (erro) {
+    console.error('Erro ao chamar Dify:', erro.message);
+    return null;
+  }
+}
+
+/** Reinicia a conversa do Dify (usado pelo botão limpar do chat). */
+export function limparConversaDify() {
+  conversaDify = null;
+}
+
+// ============================================================
 // Ollama (local ou cloud)
 // ============================================================
 function ollamaHeaders(extra = {}) {
@@ -207,12 +250,18 @@ export async function processarMensagem({ conteudo, usuarioId = null, modelo = n
       resposta = respostaApi;
       fonte = 'ollama';
     } else {
-      respostaApi = await chamarAnthropic(mensagens);
+      respostaApi = await chamarDify(mensagens, conteudo.trim());
       if (respostaApi) {
         resposta = respostaApi;
-        fonte = 'anthropic';
+        fonte = 'dify';
       } else {
-        resposta = `Não entendi como ajudar com isso.\n\n${COMANDOS.find((c) => c.id === 'ajuda').acao()}`;
+        respostaApi = await chamarAnthropic(mensagens);
+        if (respostaApi) {
+          resposta = respostaApi;
+          fonte = 'anthropic';
+        } else {
+          resposta = `Não entendi como ajudar com isso.\n\n${COMANDOS.find((c) => c.id === 'ajuda').acao()}`;
+        }
       }
     }
   }
