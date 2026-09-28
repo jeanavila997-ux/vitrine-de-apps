@@ -238,6 +238,8 @@ function renderizarMensagens() {
 
 function limparChat() {
   chat.mensagens = [];
+  // Reinicia também a conversa mantida no servidor do Dify, se houver.
+  fetch('/api/dify/conversa/limpar', { method: 'POST' }).catch(() => {});
   renderizarTelaAgente();
 }
 

@@ -13,7 +13,7 @@ import {
   atividadeRecentePorModo,
   testarMySql,
 } from './db.js';
-import { processarMensagem, historicoChat, listarModelosOllama } from './agente.js';
+import { processarMensagem, historicoChat, listarModelosOllama, limparConversaDify } from './agente.js';
 import { executarAcao, verificarStatus } from './process-manager.js';
 
 const app = express();
@@ -174,6 +174,25 @@ app.post('/api/chat', async (req, res, next) => {
 
 app.get('/api/mysql/status', async (req, res) => {
   res.json(await testarMySql());
+});
+
+/**
+ * Estado do backend Dify do agente, para o painel da UI.
+ * A cadeia completa é: Ollama -> Dify -> Anthropic.
+ */
+/** Reinicia o thread da conversa mantida no servidor do Dify. */
+app.post('/api/dify/conversa/limpar', (req, res) => {
+  limparConversaDify();
+  res.json({ ok: true });
+});
+
+app.get('/api/dify/status', (req, res) => {
+  res.json({
+    ok: true,
+    habilitado: config.dify.habilitado,
+    configurado: Boolean(config.dify.url && config.dify.apiKey),
+    usuario: config.dify.usuario,
+  });
 });
 
 app.get('/api/ollama/modelos', async (req, res, next) => {

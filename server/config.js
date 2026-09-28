@@ -73,6 +73,16 @@ export const config = {
     habilitado: bool(process.env.AGENT_ENABLED, true),
   },
 
+  // ---- Dify (plataforma de agentes e workflows de LLM) ----
+  // A URL deve incluir o prefixo da versão (ex.: https://api.dify.ai/v1
+  // ou http://127.0.0.1/v1 em self-hosting). A chave é por app (app-…).
+  dify: {
+    url: (process.env.DIFY_API_URL ?? '').replace(/\/+$/, ''),
+    apiKey: process.env.DIFY_API_KEY ?? '',
+    usuario: process.env.DIFY_USER ?? 'vitrine',
+    habilitado: bool(process.env.DIFY_ENABLED, true),
+  },
+
   // ---- Ollama ----
   ollama: {
     get url() {
