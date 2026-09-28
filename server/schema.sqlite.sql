@@ -154,11 +154,7 @@ CREATE TABLE IF NOT EXISTS integracoes (
 CREATE INDEX IF NOT EXISTS idx_integracoes_origem ON integracoes (app_origem);
 
 -- ============================================================
--- 8. logs_agente — auditoria de tudo que o agente fez
--- ============================================================
-
--- ============================================================
--- 9. chat_mensagens — histórico de conversas com o agente
+-- 8. chat_mensagens — histórico de conversas com o agente
 -- ============================================================
 CREATE TABLE IF NOT EXISTS chat_mensagens (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -174,7 +170,7 @@ CREATE TABLE IF NOT EXISTS chat_mensagens (
 CREATE INDEX IF NOT EXISTS idx_chat_mensagens_data ON chat_mensagens (criado_em DESC);
 
 -- ============================================================
--- 8. logs_agente — auditoria de tudo que o agente fez
+-- 9. logs_agente — auditoria de tudo que o agente fez
 -- ============================================================
 CREATE TABLE IF NOT EXISTS logs_agente (
   id            INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -184,7 +184,7 @@ async function chamarAnthropic(mensagens) {
 export async function processarMensagem({ conteudo, usuarioId = null, modelo = null }) {
   if (!conteudo?.trim()) throw new Error('Mensagem vazia');
 
-  salvarMensagemChat({ usuarioId, papel: 'user', conteudo: conteudo.trim(), meta: modelo ? JSON.stringify({ modelo }) : null });
+  salvarMensagemChat({ usuarioId, papel: 'user', conteudo: conteudo.trim(), meta: modelo ? { modelo } : null });
 
   const comando = detectarComando(conteudo.trim());
   let resposta;

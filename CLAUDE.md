@@ -17,7 +17,7 @@ npm start                 # servidor em 127.0.0.1:4400
 npm run dev               # idem, reinicia ao salvar
 npm run check             # node --check nos arquivos do servidor
 
-npm run db:init           # cria as 8 tabelas no SQLite local
+npm run db:init           # cria as 9 tabelas no SQLite local
 npm run db:init:mysql     # cria as mesmas no MariaDB da Hostinger
 npm run db:seed           # popula o catálogo a partir de apps-registry.json
 npm run db:sync           # envia catálogo local -> MariaDB
@@ -30,8 +30,8 @@ npm run plano:pdf         # regenera PLANO.html a partir do PLANO.md
 Todos os scripts de banco são idempotentes (`CREATE ... IF NOT EXISTS`,
 UPSERT por slug). Rodar de novo nunca apaga dados.
 
-Não há suíte de testes ainda — `npm test` aponta para `server/test/`, que
-está vazio.
+Testes de regressão em `server/test/` — `npm test` valida o registry contra
+os constraints do schema e o fluxo `db:init` + `db:seed` em banco novo.
 
 ## Arquitetura
 
@@ -71,7 +71,7 @@ que nem sempre está montado.
 
 ### Schema
 
-8 tabelas + 1 view, espelhadas em `schema.sqlite.sql` e `schema.mysql.sql`:
+9 tabelas + 1 view, espelhadas em `schema.sqlite.sql` e `schema.mysql.sql`:
 `usuarios`, `sessoes`, `apps`, `app_status`, `execucoes`, `automacoes`,
 `integracoes`, `logs_agente`, e a view `v_apps_com_status`.
 

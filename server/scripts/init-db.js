@@ -23,17 +23,18 @@ const TABELAS_ESPERADAS = [
 async function inicializarSqlite() {
   console.log('SQLite —', config.sqlite.caminho);
 
-  // Migrações idempotentes precisam rodar ANTES do schema: a view
-  // v_apps_com_status referencia colunas novas, então elas têm que existir
-  // quando o CREATE VIEW for executado.
+  aplicarSchemaSqlite();
+
+  // Migrações idempotentes rodam DEPOIS do schema: em banco novo a tabela apps
+  // só existe depois dele. A view v_apps_com_status já cobre pid_file no
+  // CREATE VIEW do schema atual; a migração cobre bancos antigos, em que o
+  // CREATE TABLE IF NOT EXISTS não adiciona colunas novas.
   const db = abrirSqlite();
   const colunasApps = db.prepare(`PRAGMA table_info(apps)`).all().map((c) => c.name);
   if (!colunasApps.includes('pid_file')) {
     db.exec(`ALTER TABLE apps ADD COLUMN pid_file TEXT`);
     console.log('  migração: coluna apps.pid_file adicionada');
   }
-
-  aplicarSchemaSqlite();
 
   const tabelas = db
     .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name`)
