@@ -96,6 +96,18 @@ botão de limpar o chat reinicia o thread via `/api/dify/conversa/limpar`.
 Config em `config.dify` (`DIFY_API_URL` com prefixo de versão, `DIFY_API_KEY`
 por app, `DIFY_USER`).
 
+### Agente controla processos
+
+Os comandos `iniciar/parar` do chat executam de fato via `executarAcao` do
+`process-manager.js` — mesma allowlist, mesma auditoria (`origem = 'agente'`
+em `execucoes`). `parar` é destrutivo: exige `confirmar <slug>` em até 2
+minutos (confirmação em memória, um pending por app). Apps sem
+`comando_start` (ex.: HomeoVet) são recusados com aviso.
+
+Atenção: em apps com porta compartilhada (issue #4), `verificarStatus`
+ainda infere estado pela porta — evitar parar via agente enquanto a
+colisão da 5173 existir.
+
 ## Segredos — o repositório é público
 
 - Credenciais só no `.env` (git-ignorado). `.env.example` nunca leva valor real.

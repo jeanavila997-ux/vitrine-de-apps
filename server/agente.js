@@ -8,6 +8,39 @@ const SYSTEM_PROMPT =
   'Você é o agente da Vitrine de Apps, um orquestrador local de projetos. Responda em português, de forma objetiva. Quando souber, mencione os apps do catálogo. Não execute comandos destrutivos sem confirmação.';
 
 // ============================================================
+// Controle de processos via agente
+// ============================================================
+// Ações destrutivas (parar) exigem confirmação explícita: a intenção fica
+// pendente por 2 minutos e "confirmar" a executa. Iniciar dispensa
+// confirmação — é o mesmo botão da UI, dentro da allowlist.
+const confirmacoes = new Map();
+const TTL_CONFIRMACAO_MS = 2 * 60 * 1000;
+
+function registrarConfirmacao(slug, acao) {
+  confirmacoes.set(slug, { acao, expiraEm: Date.now() + TTL_CONFIRMACAO_MS });
+}
+
+function consumirConfirmacao(slug, acao) {
+  const pend = confirmacoes.get(slug);
+  confirmacoes.delete(slug);
+  if (!pend || pend.acao !== acao || Date.now() > pend.expiraEm) return false;
+  return true;
+}
+
+async function executarAcaoApp({ app, acao, usuarioId = null }) {
+  const { executarAcao } = await import('./process-manager.js');
+  const resultado = await executarAcao({
+    app,
+    acao,
+    origem: 'agente',
+    usuarioId,
+  });
+  return resultado.ok
+    ? `${resultado.mensagem}\n(Estado: ${resultado.estado}.)`
+    : `${resultado.mensagem}`;
+}
+
+// ============================================================
 // Comandos CLI locais
 // ============================================================
 const COMANDOS = [
@@ -40,23 +73,44 @@ const COMANDOS = [
   {
     id: 'iniciar_app',
     padroes: [/^(iniciar?|startar?|subir|ligar)\s+(?:o\s+)?(.+)/i, /^start\s+(.+)/i],
-    acao: (texto, matches) => {
-      const termo = matches[1].trim().toLowerCase();
+    acao: async (texto, matches) => {
+      // matches[1] é o verbo, matches[2] é o alvo; em /^start\s+(.+)/ o
+      // alvo vem em matches[1].
+      const bruto = matches[2] ?? matches[1];
+      const termo = bruto.trim().toLowerCase();
       const app = buscarApp(termo) ?? listarApps().find((a) => a.nome.toLowerCase().includes(termo));
       if (!app) return `Não encontrei um app correspondente a "${termo}".`;
       if (app.estado === 'online') return `${app.nome} já está online.`;
-      return `Comando recebido: iniciar ${app.nome} (${app.slug}).\nAinda não controlo processos automaticamente — use o botão na tela do app quando liberado.`;
+      if (!app.comando_start) {
+        return `${app.nome} não tem comando de start na Vitrine (só apps com comando registrado na allowlist podem ser iniciados).`;
+      }
+      return executarAcaoApp({ app, acao: 'iniciar' });
     },
   },
   {
     id: 'parar_app',
     padroes: [/^(parar?|detener|matar|stop|desligar)\s+(?:o\s+)?(.+)/i],
-    acao: (texto, matches) => {
-      const termo = matches[1].trim().toLowerCase();
+    acao: async (texto, matches) => {
+      // matches[1] é o verbo, matches[2] é o alvo.
+      const termo = (matches[2] ?? '').trim().toLowerCase();
       const app = buscarApp(termo) ?? listarApps().find((a) => a.nome.toLowerCase().includes(termo));
       if (!app) return `Não encontrei um app correspondente a "${termo}".`;
       if (app.estado !== 'online') return `${app.nome} não está online.`;
-      return `Comando recebido: parar ${app.nome} (${app.slug}).\nAinda não controlo processos automaticamente — use o gerenciador de tarefas ou pare manualmente.`;
+      registrarConfirmacao(app.slug, 'parar');
+      return `⚠️ Parar ${app.nome} (${app.slug}) encerra o processo agora.\nResponda "confirmar ${app.slug}" para executar (válido por 2 minutos).`;
+    },
+  },
+  {
+    id: 'confirmar_acao',
+    padroes: [/^(confirmar?|confirmo|ok)\s+(?:parar\s+)?(.+)/i],
+    acao: async (texto, matches) => {
+      const termo = matches[2].trim().toLowerCase();
+      const app = buscarApp(termo) ?? listarApps().find((a) => a.nome.toLowerCase().includes(termo));
+      if (!app) return `Não encontrei um app correspondente a "${termo}".`;
+      if (!consumirConfirmacao(app.slug, 'parar')) {
+        return `Não há parada de ${app.nome} aguardando confirmação (ou expirou). Peça "parar ${app.slug}" novamente.`;
+      }
+      return executarAcaoApp({ app, acao: 'parar' });
     },
   },
   {
@@ -73,7 +127,7 @@ const COMANDOS = [
     id: 'ajuda',
     padroes: [/^(ajuda|help|comandos|o\s+que\s+(?:voce|vc)\s+(?:faz|faz\?))/i, /^\?$/],
     acao: () => {
-      return `Comandos disponíveis:\n• listar apps — mostra o catálogo e status\n• status <nome ou slug> — estado de um app\n• iniciar <nome ou slug> — prepara para subir um app\n• parar <nome ou slug> — prepara para derrubar um app\n• listar modelos — modelos Ollama disponíveis\n• ajuda — mostra esta mensagem\n\nPara conversas livres, configure OLLAMA_API_KEY no .env.`;
+      return `Comandos disponíveis:\n• listar apps — mostra o catálogo e status\n• status <nome ou slug> — estado de um app\n• iniciar <nome ou slug> — sobe o app de verdade (allowlist)\n• parar <nome ou slug> — pede parada; exige "confirmar <slug>"\n• confirmar <nome ou slug> — executa a parada confirmada\n• listar modelos — modelos Ollama disponíveis\n• ajuda — mostra esta mensagem\n\nPara conversas livres, configure Ollama, Dify ou Anthropic no .env.`;
     },
   },
 ];
