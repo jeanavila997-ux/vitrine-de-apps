@@ -6,6 +6,8 @@
 // 1. apps-registry.json com valor de `tipo` fora do CHECK do schema
 //    (HomeoVet chegou como "cli" e travou o db:seed inteiro).
 // 2. db:init rodando migração antes do schema criar a tabela apps.
+// 3. Registry com porta duplicada entre apps visíveis (issue #4) — o estado
+//    é inferido pela porta, então colisão gera status falso.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -13,6 +15,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { validarRegistro, portasDuplicadas } from '../validar-registry.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..', '..');
@@ -79,6 +82,60 @@ test('db:init e db:seed funcionam em banco novo', () => {
       stdio: 'pipe',
     });
   } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('registry atual: colisão conhecida da issue #4 segue detectada', () => {
+  // O registry ainda tem Estante e Cruzamento Bovinos na 5173 — a correção
+  // depende de decisão de portas (issue #4). Enquanto isso, a validação
+  // precisa continuar detectando-a, não silenciá-la.
+  const { ok, avisos } = validarRegistro(registry);
+  assert.ok(!ok, 'a colisão da 5173 deveria ser detectada');
+  assert.ok(
+    avisos.some((a) => a.includes('5173')),
+    `esperado aviso da porta 5173 em:\n${avisos.join('\n')}`
+  );
+});
+
+test('portasDuplicadas detecta a colisão e ignora apps invisíveis', () => {
+  const duplas = portasDuplicadas([
+    { slug: 'a', porta: 5173, visivel: 1 },
+    { slug: 'b', porta: 5173, visivel: 1 },
+    { slug: 'c', porta: 5173, visivel: 0 },
+    { slug: 'd', porta: 8080, visivel: 1 },
+    { slug: 'e', porta: null, visivel: 1 },
+  ]);
+  assert.deepEqual(duplas, [{ porta: 5173, apps: ['a', 'b'] }]);
+});
+
+test('db:seed --estrito falha quando o registry tem colisão de portas', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vitrine-test-'));
+  const dbPath = path.join(dir, 'vitrine.db');
+  const registryBak = path.join(dir, 'apps-registry.json');
+  fs.copyFileSync(path.join(ROOT, 'server', 'apps-registry.json'), registryBak);
+
+  try {
+    const registro = JSON.parse(fs.readFileSync(registryBak, 'utf8'));
+    const boi = registro.apps.find((a) => a.slug === 'cruzamento-bovinos');
+    boi.porta = registro.apps.find((a) => a.slug === 'estante-de-ebooks').porta;
+    fs.writeFileSync(registryBak, JSON.stringify(registro, null, 2));
+
+    fs.copyFileSync(registryBak, path.join(ROOT, 'server', 'apps-registry.json'));
+
+    let falhou = false;
+    try {
+      execFileSync(process.execPath, ['server/scripts/seed-apps.js', '--estrito'], {
+        cwd: ROOT,
+        env: { ...process.env, SQLITE_PATH: dbPath },
+        stdio: 'pipe',
+      });
+    } catch {
+      falhou = true;
+    }
+    assert.ok(falhou, 'seed --estrito deveria ter falhado com portas duplicadas');
+  } finally {
+    fs.copyFileSync(registryBak, path.join(ROOT, 'server', 'apps-registry.json'));
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });

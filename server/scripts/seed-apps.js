@@ -1,6 +1,7 @@
 // Popula a tabela `apps` a partir de apps-registry.json.
 //
-//   npm run db:seed
+//   npm run db:seed             avisa sobre portas duplicadas
+//   npm run db:seed -- --estrito  falha (exit 1) se houver
 //
 // Usa UPSERT por slug: rodar de novo atualiza os dados sem duplicar
 // e sem perder o histórico de execuções, que referencia o id.
@@ -8,11 +9,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { abrirSqlite, aplicarSchemaSqlite, fecharSqlite } from '../db.js';
 import { ROOT } from '../config.js';
+import { validarRegistro, formatarAvisos } from '../validar-registry.js';
 
 const registro = JSON.parse(
   fs.readFileSync(path.join(ROOT, 'server', 'apps-registry.json'), 'utf8')
 );
 
+const { ok, avisos } = validarRegistro(registro);
+if (avisos.length) {
+  console.warn('Avisos no catálogo:\n' + formatarAvisos(avisos) + '\n');
+  if (process.argv.includes('--estrito')) {
+    console.error('Modo estrito: catálogo inválido, nada foi gravado.');
+    process.exit(1);
+  }
+}
 aplicarSchemaSqlite();
 const db = abrirSqlite();
 
