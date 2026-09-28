@@ -179,6 +179,22 @@ CREATE TABLE IF NOT EXISTS logs_agente (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
+-- 9. chat_mensagens — histórico de conversas com o agente
+-- ============================================================
+CREATE TABLE IF NOT EXISTS chat_mensagens (
+  id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  usuario_id INT UNSIGNED NULL,
+  papel      ENUM('user','assistant','system') NOT NULL DEFAULT 'user',
+  conteudo   TEXT NOT NULL,
+  meta       JSON NULL,
+  criado_em  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_chat_mensagens_data (criado_em),
+  CONSTRAINT fk_chat_usuario FOREIGN KEY (usuario_id)
+    REFERENCES usuarios (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
 -- Visão auxiliar: catálogo com status
 -- ============================================================
 CREATE OR REPLACE VIEW v_apps_com_status AS

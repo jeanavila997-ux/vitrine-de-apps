@@ -15,7 +15,7 @@ entre os aplicativos.
 npm install
 cp .env.example .env      # preencha as credenciais
 npm run db:init           # cria as tabelas no SQLite
-npm run db:seed           # popula o catálogo com os 5 apps
+npm run db:seed           # popula o catálogo com os 6 apps
 npm start                 # sobe em 127.0.0.1:4400
 ```
 
@@ -42,8 +42,8 @@ server/          Backend Express (porta 4400)
 ├── config.js         Configuração central — o domínio mora aqui
 ├── db.js             SQLite local + pool MariaDB
 ├── sync-mysql.js     SQLite → Hostinger (nunca o contrário)
-├── apps-registry.json Os 5 apps: caminho, porta, comando, cor
-├── schema.sqlite.sql  8 tabelas + view
+├── apps-registry.json Os 6 apps: caminho, porta, comando, cor
+├── schema.sqlite.sql  9 tabelas + view
 └── schema.mysql.sql   As mesmas, em MariaDB
 
 public/          Interface — dashboard, menu, seção por app
@@ -68,6 +68,10 @@ está — o servidor não tem como iniciar processos na sua máquina.
 | Cruzamento Bovinos | 5173 | web | `avila2026/app-cruzamento-bovinos` |
 | Mestre do PC V10 | 7777 | serviço | `jeanavila997-ux/Mestre-do-PC-V10` |
 | BoiControl | 8080 | web | `jeanavila997-ux/boicontrol` |
+| HomeoVet | — | desktop | `jeanavila997-ux/homeovet` |
+
+O HomeoVet é um agente de IA em Python para terminal — sem servidor nem
+porta, por isso não tem botão de iniciar na Vitrine.
 
 A porta 4400 (servidor), 4401 (Vite) e a faixa 4410–4460 (apps lançados) foram
 escolhidas fora das que já colidem: 3000 é disputada por três projetos e 5173
@@ -86,7 +90,9 @@ por dois.
 Fases concluídas: **0** (plano), **1** (banco), **2** (catálogo) e a base da
 **4** (interface). Ver `PLANO.md` para o roteiro completo.
 
-O que já funciona: dashboard com métricas reais, menu com os 5 apps e status,
-seção individual de cada app, sincronização com a Hostinger.
+O que já funciona: dashboard com métricas reais, menu com os 6 apps e status,
+seção individual de cada app, **iniciar/parar apps de verdade** (modo local,
+via allowlist de comandos), agente de chat com Ollama, sincronização com a
+Hostinger e painel de conexões.
 
-O que ainda não: login, iniciar/parar apps, automações, o agente.
+O que ainda não: login, automações, integrações e redirecionamentos entre apps.
