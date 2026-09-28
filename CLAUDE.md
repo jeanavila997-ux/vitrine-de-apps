@@ -94,7 +94,7 @@ O Dify (plataforma de agentes/workflows de LLM) mantém o estado da conversa
 no servidor dele: `agente.js` guarda o `conversation_id` entre mensagens e o
 botão de limpar o chat reinicia o thread via `/api/dify/conversa/limpar`.
 Config em `config.dify` (`DIFY_API_URL` com prefixo de versão, `DIFY_API_KEY`
-por app, `DIFY_USER`).
+por app, `DIFY_USER`). Guia de criação do app no Dify: `docs/dify-setup.md`.
 
 ### Agente controla processos
 
