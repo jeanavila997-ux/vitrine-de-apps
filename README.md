@@ -55,9 +55,14 @@ controla processos na sua máquina e precisa funcionar sem internet. O MariaDB
 da Hostinger recebe a cópia que alimenta o site público. A sincronização é
 sempre SQLite → MariaDB.
 
-**Dois modos.** Localmente a Vitrine inicia e para os apps de verdade. Em
+**Dois modos.** Localmente a Vitrine inicia e para os apps de verdade — pelo
+botão da UI ou pelo agente de chat (com confirmação para parar). Em
 `vitrinedeapps.cloud` ela é um portal: mostra cada app e leva para onde ele
 está — o servidor não tem como iniciar processos na sua máquina.
+
+**Agente com três backends.** O chat tenta em ordem: Ollama (local) →
+[Dify](docs/dify-setup.md) → Anthropic. Cada um é opcional; a configuração do
+app no Dify está em `docs/dify-setup.md`.
 
 ## Os aplicativos
 
