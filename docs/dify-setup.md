@@ -66,7 +66,7 @@ Como responder:
 | `deploy/ESTADO.md` | estado do deploy e bloqueio do tipo de site |
 | `deploy/README.md` | passo a passo de deploy |
 
-Mode de indexação sugerido: **Alta qualidade** (o catálogo é pequeno;
+Modo de indexação sugerido: **Alta qualidade** (o catálogo é pequeno;
 precisão > custo). Vincule a base ao app em **Contexto**.
 
 ## 4. API Key
@@ -81,12 +81,16 @@ DIFY_USER=vitrine
 ```
 
 Reinicie a Vitrine e verifique em `GET /api/dify/status` →
-`{"configurado": true}`.
+`{"configurado": true}`. Isso só confirma que `DIFY_API_URL` e
+`DIFY_API_KEY` estão setados (`configurado = Boolean(url && apiKey)`) — não
+verifica `DIFY_ENABLED`, nem se a URL tem o prefixo `/v1`, nem se a chave é
+válida. Pra provar que o Dify responde de verdade, use o teste de fumaça do
+item 6.
 
 ## 5. Ajustes finos
 
-- **Coordinate (Coordenar):** desative o herói de sugestões iniciais se
-  preferir respostas secas.
+- **Sugestões de abertura:** desative os "Conversation Openers" (perguntas
+  sugeridas no início do chat) se preferir respostas secas.
 - **Variáveis de entrada:** a Vitrine envia `inputs: {}` — não configure
   variáveis obrigatórias, ou a chamada falha com `invalid_param`.
 - **Function calling / ferramentas:** ainda não conectado ao
@@ -102,6 +106,9 @@ Reinicie a Vitrine e verifique em `GET /api/dify/status` →
 
 1. Chat da Vitrine: `ajuda` → resposta local (não passa pelo Dify)
 2. Chat: `listar apps` → resposta local
-3. Chat: pergunta livre (`"o que é o Mestre do PC?"`) → se Ollama estiver
-   ligado, responde o Ollama; com `OLLAMA_ENABLED=false`, cai no Dify
-4. `GET /api/dify/status` → `configurado: true`
+3. Chat: pergunta livre (`"o que é o Mestre do PC?"`) com `OLLAMA_ENABLED=false`
+   → se a resposta vier do Dify, a Vitrine devolve `fonte: "dify"` (ver
+   `POST /api/chat`); `fonte: "anthropic"` ou a mensagem de ajuda indicam que
+   o Dify não respondeu, mesmo com `configurado: true`
+4. `GET /api/dify/status` → `configurado: true` (confirma só que URL e chave
+   estão setadas, não que o Dify responde — veja o passo 3)
