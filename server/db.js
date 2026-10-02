@@ -2,7 +2,7 @@
 //
 // SQLite é a fonte da verdade local — o app precisa funcionar sem internet,
 // já que controla processos na própria máquina. O MySQL da Hostinger recebe
-// a cópia sincronizada que alimenta o site público em vitrinedeapps.cloud.
+// a cópia sincronizada que alimenta o catálogo público.
 import fs from 'node:fs';
 import path from 'node:path';
 import Database from 'better-sqlite3';

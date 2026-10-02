@@ -4,7 +4,7 @@ Gerenciador e orquestrador dos meus projetos: catálogo visual, controle de
 processos e um agente Claude — com automações, integrações e redirecionamentos
 entre os aplicativos.
 
-**Site público:** https://vitrinedeapps.cloud
+**Catálogo público:** https://jeanavila997-ux.github.io/vitrine-de-apps/
 **Local:** http://127.0.0.1:4400
 
 ---
@@ -31,6 +31,7 @@ npm start                 # sobe em 127.0.0.1:4400
 | `npm run db:sync` | Envia o catálogo local para a Hostinger |
 | `npm run db:check` | Mostra o que existe de fato no servidor |
 | `npm run check` | Verifica sintaxe dos arquivos do servidor |
+| `npm run pages:build` | Gera o catálogo estático em `docs/` (GitHub Pages) |
 | `npm run plano:pdf` | Regenera `PLANO.html` a partir do `PLANO.md` |
 
 Todos os scripts de banco são idempotentes — rodar de novo não apaga nada.
@@ -56,9 +57,13 @@ da Hostinger recebe a cópia que alimenta o site público. A sincronização é
 sempre SQLite → MariaDB.
 
 **Dois modos.** Localmente a Vitrine inicia e para os apps de verdade — pelo
-botão da UI ou pelo agente de chat (com confirmação para parar). Em
-`vitrinedeapps.cloud` ela é um portal: mostra cada app e leva para onde ele
-está — o servidor não tem como iniciar processos na sua máquina.
+botão da UI ou pelo agente de chat (com confirmação para parar). Em modo
+hospedado ela é um portal: mostra cada app e leva para onde ele está — o
+servidor não tem como iniciar processos na sua máquina.
+
+**Catálogo estático.** `vitrinedeapps.cloud` foi perdido; o link público hoje
+é um catálogo estático no GitHub Pages (`docs/`, gerado por
+`npm run pages:build` a partir de `apps-registry.json`), sem status ao vivo.
 
 **Agente com três backends.** O chat tenta em ordem: Ollama (local) →
 [Dify](docs/dify-setup.md) → Anthropic. Cada um é opcional; a configuração do
