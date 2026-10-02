@@ -169,6 +169,9 @@ async function chamarDify(mensagens, conteudo) {
     });
     if (!res.ok) {
       const erro = await res.text();
+      // Conversa apagada ou inválida no lado do Dify: descarta o id guardado
+      // para a próxima mensagem abrir um thread novo em vez de repetir o erro.
+      if (res.status === 404) conversaDify = null;
       throw new Error(`Dify respondeu ${res.status}: ${erro}`);
     }
     const dados = await res.json();
@@ -260,7 +263,7 @@ async function chamarAnthropic(mensagens) {
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1024,
         system: SYSTEM_PROMPT,
-        messages: mensagens.map((m) => ({ role: m.papel, content: m.conteudo })),
+        messages: mensagens.filter((m) => m.role !== 'system').map((m) => ({ role: m.role, content: m.content })),
       }),
     });
     if (!res.ok) {
