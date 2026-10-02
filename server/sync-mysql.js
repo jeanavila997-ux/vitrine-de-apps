@@ -1,5 +1,5 @@
 // Sincroniza o SQLite local (fonte da verdade) com o MySQL da Hostinger,
-// que alimenta o site público em vitrinedeapps.cloud.
+// que alimenta o catálogo público.
 //
 // Direção: SQLite → MySQL, sempre. O MySQL nunca escreve de volta.
 // Só sobem dados de catálogo e status; sessões e senhas ficam locais.

@@ -1,5 +1,5 @@
 // Servidor da Vitrine de Apps — API + interface.
-// http://127.0.0.1:4400 · produção em https://vitrinedeapps.cloud
+// http://127.0.0.1:4400 · catálogo público em https://jeanavila997-ux.github.io/vitrine-de-apps/
 import path from 'node:path';
 import express from 'express';
 import { config, ROOT, origensPermitidas, validarConfig } from './config.js';

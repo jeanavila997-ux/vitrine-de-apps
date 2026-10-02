@@ -25,8 +25,10 @@ export const config = {
   },
 
   // ---- Domínio público do projeto ----
-  dominio: 'vitrinedeapps.cloud',
-  urlPublica: process.env.PUBLIC_URL ?? 'https://vitrinedeapps.cloud',
+  // vitrinedeapps.cloud foi perdido; catálogo público agora é estático no
+  // GitHub Pages (ver scripts/build-pages.mjs e npm run pages:build).
+  dominio: 'jeanavila997-ux.github.io',
+  urlPublica: process.env.PUBLIC_URL ?? 'https://jeanavila997-ux.github.io/vitrine-de-apps',
 
   // ---- Servidor local ----
   porta: num(process.env.PORT, 4400),

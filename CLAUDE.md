@@ -5,7 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## O que é
 
 Orquestrador dos projetos do usuário: catálogo dos apps, controle de processos
-e um agente Claude. Domínio de produção: **vitrinedeapps.cloud**.
+e um agente Claude. `vitrinedeapps.cloud` foi perdido — o catálogo público
+hoje é estático, publicado via GitHub Pages em
+**jeanavila997-ux.github.io/vitrine-de-apps** (gerado por `npm run
+pages:build`, ver `scripts/build-pages.mjs`). O servidor Node na Hostinger
+(modo `hospedado`, seção abaixo) segue existindo para quem acessa direto,
+mas não tem mais domínio público apontando pra ele.
 
 Repositório: `jeanavila997-ux/vitrine-de-apps` (**público** — ver a seção de
 segredos antes de commitar qualquer coisa).
@@ -25,6 +30,7 @@ npm run db:check          # lista o que existe de fato no servidor remoto
 
 npm run deploy            # rsync + ssh (ver deploy/ESTADO.md antes)
 npm run plano:pdf         # regenera PLANO.html a partir do PLANO.md
+npm run pages:build       # regenera docs/index.html (catálogo do GitHub Pages)
 ```
 
 Todos os scripts de banco são idempotentes (`CREATE ... IF NOT EXISTS`,
@@ -77,6 +83,17 @@ que nem sempre está montado.
 
 **Ao alterar o schema, altere os dois arquivos.** Eles não são gerados um do
 outro.
+
+## Catálogo público (GitHub Pages)
+
+`docs/index.html` é gerado por `scripts/build-pages.mjs` a partir de
+`server/apps-registry.json` — sem status ao vivo, sem banco: é só a lista de
+apps pra quem só tem o link público. Rode `npm run pages:build` e commite o
+resultado sempre que o registry mudar (não é gerado em CI).
+
+No GitHub, em **Settings → Pages**, a fonte precisa estar como "Deploy from a
+branch", branch `main`, pasta `/docs` — é um toggle manual, único, que
+nenhuma ferramenta de agente configura por aqui.
 
 ## Portas
 

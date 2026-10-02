@@ -1,0 +1,40 @@
+/* Vitrine de Apps — catálogo estático (GitHub Pages).
+   Derivado do design system em design-system/tokens.css. */
+
+:root{
+  --vd-bg:#16181d;--vd-surface:#1e2128;--vd-surface-hover:#262a33;
+  --vd-border:#2f343d;--vd-border-strong:#3d434e;
+  --vd-text:#e6e8ec;--vd-text-muted:#9aa1ad;--vd-text-faint:#6b7280;
+  --vd-accent:#cc785c;--vd-accent-hover:#d98a70;
+  --vd-font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --vd-font-mono:'Cascadia Code',Consolas,'SF Mono',monospace;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--vd-bg);color:var(--vd-text);font-family:var(--vd-font);font-size:14px;line-height:1.55}
+a{color:inherit;text-decoration:none}
+code{font-family:var(--vd-font-mono);font-size:12px;background:#121419;padding:2px 6px;border-radius:4px;color:var(--vd-accent)}
+
+.vd-pageheader{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--vd-border)}
+.vd-pageheader__brand{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600}
+.vd-pageheader__logo{width:26px;height:26px;border-radius:7px;background:var(--vd-accent);display:grid;place-items:center;font-size:14px;color:#16181d;font-weight:700;flex-shrink:0}
+.vd-pageheader__sub{color:var(--vd-text-faint);font-size:12.5px;margin:0 0 20px}
+
+.vd-content{max-width:1080px;margin:0 auto;padding:24px}
+
+.vd-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;font-family:inherit;font-size:12.5px;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.vd-btn--secondary{background:var(--vd-surface);color:var(--vd-text);border-color:var(--vd-border-strong)}
+.vd-btn--secondary:hover{background:var(--vd-surface-hover)}
+.vd-btn--sm{padding:5px 10px;font-size:12px}
+
+.vd-appgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(262px,1fr));gap:13px}
+.vd-appcard{--app-color:var(--vd-accent);position:relative;background:var(--vd-surface);border:1px solid var(--vd-border);border-radius:12px;padding:15px;overflow:hidden}
+.vd-appcard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--app-color);opacity:.85}
+.vd-appcard__head{display:flex;align-items:flex-start;gap:11px;margin-bottom:10px}
+.vd-appcard__icon{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-size:18px;background:color-mix(in srgb,var(--app-color) 16%,transparent);border:1px solid color-mix(in srgb,var(--app-color) 32%,transparent);flex-shrink:0}
+.vd-appcard__titles{flex:1;min-width:0}
+.vd-appcard__name{font-size:14.5px;font-weight:600;margin:0 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vd-appcard__stack{font-size:11.5px;color:var(--vd-text-faint);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vd-appcard__desc{font-size:12.5px;color:var(--vd-text-muted);line-height:1.5;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:37px}
+.vd-appcard__foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:11px;border-top:1px solid var(--vd-border)}
+.vd-appcard__port{font-family:var(--vd-font-mono);font-size:11px;color:var(--vd-text-faint)}

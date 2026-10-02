@@ -2,7 +2,7 @@
   "name": "vitrine-de-apps",
   "version": "0.1.0",
   "description": "Gerenciador e orquestrador dos projetos: vitrine, controle de processos e agente",
-  "homepage": "https://vitrinedeapps.cloud",
+  "homepage": "https://jeanavila997-ux.github.io/vitrine-de-apps/",
   "type": "module",
   "private": true,
   "engines": {
@@ -19,7 +19,8 @@
     "test": "node --test 'server/test/**/*.test.js'",
     "check": "node --check server/index.js && node --check server/db.js && node --check server/config.js",
     "deploy": "bash deploy/deploy.sh",
-    "plano:pdf": "node scripts/md2html.js"
+    "plano:pdf": "node scripts/md2html.js",
+    "pages:build": "node scripts/build-pages.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
