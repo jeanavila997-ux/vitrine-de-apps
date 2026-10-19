@@ -235,12 +235,13 @@ app.get('/api/conexoes', async (req, res) => {
   // MariaDB — remoto
   const t0 = Date.now();
   const teste = await testarMySql();
+  // Host e nome do banco nunca saem na resposta — CLAUDE.md proíbe expor isso
+  // em qualquer lugar acessível, e esta rota não tem autenticação própria.
   let mysql = {
     ok: teste.ok,
     tipo: 'MariaDB',
     papel: 'produção / site público',
-    host: config.mysql.host || null,
-    banco: config.mysql.banco || null,
+    configurado: config.mysql.configurado(),
     mensagem: teste.mensagem,
     latenciaMs: Date.now() - t0,
   };

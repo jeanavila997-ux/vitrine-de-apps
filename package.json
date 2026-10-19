@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "start": "node server/index.js",
@@ -23,12 +23,9 @@
     "pages:build": "node scripts/build-pages.mjs"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.2",
     "better-sqlite3": "^12.4.1",
-    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "express-rate-limit": "^8.2.0",
     "mysql2": "^3.15.3"
   },
   "keywords": [
