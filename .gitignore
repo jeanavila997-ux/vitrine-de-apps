@@ -19,6 +19,9 @@ build/
 id_ed25519*
 id_rsa*
 vitrine_deploy*
+# Detalhes de infraestrutura (caminhos, domínios da conta, IP, SSH)
+deploy/PRIVADO.md
+*.privado.md
 
 # Banco local
 *.db

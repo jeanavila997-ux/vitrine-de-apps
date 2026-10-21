@@ -1,43 +1,25 @@
-# Estado do deploy — vitrinedeapps.cloud
+# Estado do deploy
 
-Atualizado em 16/08/2026.
+Atualizado em 20/10/2026. Detalhes de infraestrutura (caminhos, domínios da
+conta, ambiente do servidor) ficam em `deploy/PRIVADO.md`, local e
+git-ignorado.
 
-## Concluído
+## Concluído na hospedagem compartilhada (16/08/2026)
 
-- [x] Chave SSH `vitrine-deploy` gerada e cadastrada no hPanel
-- [x] Conexão SSH funcionando (`.keys/vitrine_deploy`, ACL corrigida)
-- [x] Código enviado para `~/domains/vitrinedeapps.cloud/public_html`
-- [x] Dependências instaladas com Node 24.6.0 do servidor
+- [x] Chave SSH de deploy gerada e cadastrada no painel da hospedagem
+- [x] Conexão SSH funcionando (chave em `.keys/`, ACL corrigida no Windows)
+- [x] Código enviado ao servidor e dependências instaladas com Node 24
 - [x] `.env` de produção criado no servidor com `chmod 600`
-- [x] **Servidor validado rodando na Hostinger** — `/api/saude` e `/api/apps`
-      respondem com os 5 apps vindos do MariaDB
+- [x] Servidor validado rodando — `/api/saude` e `/api/apps` respondem com
+      os apps vindos do MariaDB
 
-## Bloqueado — precisa de decisão
+## Bloqueado
 
-O domínio ainda serve `default.php` porque **o site é do tipo PHP/HTML, não
-Web App (Node.js)**. Confirmado em Sites → Web Apps: `vitrinedeapps.cloud`
-não aparece na lista (aparecem `ebooksaude.store`, `cerebroduplo.shop` e dois
-temporários).
+O domínio continua servindo a página padrão porque o site foi criado como
+**PHP/HTML, não Web App (Node.js)**, e o painel não converte o tipo. As saídas
+avaliadas foram recriar o site como Web App (destrutivo), reaproveitar um Web
+App existente ou criar um subdomínio como Web App (a menos arriscada).
 
-O menu de ações do site oferece apenas: favoritos, etiqueta, alterar domínio,
-detalhes e Remover. **Não há conversão de tipo.**
-
-### Opções
-
-1. **Remover e recriar como Web App** — resolve, mas é destrutivo: pode afetar
-   SSL, e-mails e configurações associadas ao domínio.
-2. **Apontar um dos Web Apps existentes** para este projeto, se algum dos dois
-   temporários (`darkgrey-penguin`, `hotpink-tiger`) estiver livre, e depois
-   trocar o domínio deles para vitrinedeapps.cloud.
-3. **Adicionar um subdomínio** como Web App (ex.: `app.vitrinedeapps.cloud`)
-   e deixar o domínio raiz como está.
-
-A opção 3 é a menos arriscada.
-
-## Ambiente do servidor (para referência)
-
-- Node: `/opt/alt/alt-nodejs24/root/usr/bin/node` (v24.6.0), npm 11.5.1
-- `node` NÃO está no PATH por padrão — exportar antes de cada comando
-- Destino: `~/domains/vitrinedeapps.cloud/public_html`
-- A conta hospeda 22 domínios — cuidado com comandos destrutivos
-- Tráfego passa pelo CDN (`Server: hcdn`), respostas podem ficar cacheadas
+Desde então o domínio foi perdido e o plano passou a ser levar a Vitrine para
+a VPS (ver `PLANO.md`). Este bloqueio só importa se a hospedagem compartilhada
+voltar a ser o alvo.
