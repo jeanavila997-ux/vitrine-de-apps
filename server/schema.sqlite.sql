@@ -63,6 +63,10 @@ CREATE TABLE IF NOT EXISTS apps (
   tem_auth        INTEGER NOT NULL DEFAULT 0,
   ordem           INTEGER NOT NULL DEFAULT 0, -- ordem no menu
   visivel         INTEGER NOT NULL DEFAULT 1,
+  status_instalado TEXT NOT NULL DEFAULT 'nao_instalado'
+    CHECK (status_instalado IN ('instalado', 'nao_instalado', 'pendente')),
+  ativo           INTEGER NOT NULL DEFAULT 1
+    CHECK (ativo IN (0, 1)),
   criado_em       TEXT    NOT NULL DEFAULT (datetime('now')),
   atualizado_em   TEXT    NOT NULL DEFAULT (datetime('now'))
 );
@@ -213,8 +217,17 @@ SELECT
   a.id, a.slug, a.nome, a.descricao, a.icone, a.cor, a.stack, a.tipo,
   a.porta, a.url_local, a.url_publica, a.repositorio, a.caminho, a.ordem,
   a.comando_start, a.pid_file,
-  COALESCE(s.estado, 'offline') AS estado,
-  s.pid, s.porta_efetiva, s.mensagem, s.iniciado_em, s.verificado_em
+  COALESCE(s.estado, 'offline') AS estado_runtime,
+  s.pid, s.porta_efetiva, s.mensagem, s.iniciado_em, s.verificado_em,
+  -- Novos campos de status de catálogo
+  a.status_instalado,
+  a.ativo,
+  CASE WHEN a.ativo = 1 THEN 'ativo' ELSE 'inativo' END AS status_nome,
+  CASE 
+    WHEN a.status_instalado = 'instalado' THEN '✅ Instalado'
+    WHEN a.status_instalado = 'nao_instalado' THEN '❌ Não Instalado'
+    ELSE '⏳ Pendente'
+  END AS status_instalado_nome
 FROM apps a
 LEFT JOIN app_status s ON s.app_id = a.id
 WHERE a.visivel = 1

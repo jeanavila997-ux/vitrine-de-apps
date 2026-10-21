@@ -18,6 +18,8 @@
       "url_publica": null,
       "banco": "supabase",
       "tem_auth": 1,
+      "status_instalado": "instalado",
+      "ativo": 1,
       "ordem": 1,
       "observacoes": "Usa três portas: 3001 (frontend lite), 3000 (API) e 3002 (cloud). A 3000 colide com Estante e Cruzamento Bovinos."
     },
@@ -38,6 +40,8 @@
       "url_publica": null,
       "banco": "sqlite",
       "tem_auth": 1,
+      "status_instalado": "instalado",
+      "ativo": 1,
       "ordem": 2,
       "observacoes": "Mora no drive F:. Se o drive não estiver montado, o estado vira 'indisponivel'. Existe um segundo repositório em avila2026/Estante-de-Ebooks — confirmar qual é o oficial."
     },
@@ -58,6 +62,8 @@
       "url_publica": null,
       "banco": "supabase",
       "tem_auth": 0,
+      "status_instalado": "instalado",
+      "ativo": 1,
       "ordem": 3,
       "observacoes": "Branch padrão é 'main-' (com hífen no fim) — provável erro de digitação. Porta 5173 colide com a Estante."
     },
@@ -79,6 +85,8 @@
       "url_publica": null,
       "banco": null,
       "tem_auth": 0,
+      "status_instalado": "instalado",
+      "ativo": 1,
       "ordem": 4,
       "observacoes": "Só roda em 127.0.0.1 e exige elevação. Não pode ser hospedado — no site público vira página de download."
     },
@@ -99,6 +107,8 @@
       "url_publica": null,
       "banco": "supabase",
       "tem_auth": 0,
+      "status_instalado": "instalado",
+      "ativo": 1,
       "ordem": 5,
       "observacoes": "ATENÇÃO: o .env deste projeto está commitado em repositório público. Rotacionar a chave do Supabase."
     },
@@ -119,6 +129,8 @@
       "url_publica": null,
       "banco": null,
       "tem_auth": 0,
+      "status_instalado": "nao_instalado",
+      "ativo": 1,
       "ordem": 6,
       "observacoes": "Scripts Python de terminal (agente_homeopatico.py, tutor_homeopatia_vet.py), sem servidor web nem porta — por isso sem comando_start no processo da Vitrine. Confirmar o caminho local exato; README menciona homeovet_cli.py e index.html que ainda não existem no repositório."
     }
