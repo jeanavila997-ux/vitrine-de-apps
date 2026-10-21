@@ -143,20 +143,26 @@ foreach ($p in $alvos) { git grep --cached -n -F $p -- ':!*.pdf' }
 - A chave SSH de deploy fica em `.keys/` (git-ignorado). No Windows, o SSH a
   recusa por ACL aberta — corrija com `icacls`.
 - O histórico também vaza: dados sensíveis já commitados exigem reescrever o
-  histórico, não só corrigir o arquivo.
+  histórico, não só corrigir o arquivo. Reescrever histórico e forçar push é
+  decisão do dono do repositório — nunca faça isso por conta própria.
+- Detalhes de infraestrutura que não são segredo, mas ajudam um atacante
+  (caminhos do servidor, outros domínios da conta, IP, porta SSH, usuário e
+  host do banco), vão em `deploy/PRIVADO.md`, nunca em arquivo versionado.
 
 ## Ambiente de produção
 
-- MariaDB **11.8.8**, não MySQL — não conte com recursos exclusivos do MySQL 8.
-- Node do servidor: `/opt/alt/alt-nodejs24/root/usr/bin/node` (v24.6.0).
-  **Não está no PATH** — exporte antes de cada comando remoto.
-- Destino do deploy: `~/domains/vitrinedeapps.cloud/public_html`.
-- A conta hospeda **22 domínios**. Nunca use `rsync --delete` sem listar o
-  destino antes; prefira extrair tarball, que não apaga.
-- O tráfego passa pelo CDN (`Server: hcdn`) — respostas ficam cacheadas.
-- **O site é do tipo PHP/HTML, não Web App (Node.js).** Por isso o domínio
-  ainda serve `default.php` apesar do código estar no servidor e funcionar.
-  Ver `deploy/ESTADO.md`.
+- Banco de produção é MariaDB 11.x, não MySQL — não conte com recursos
+  exclusivos do MySQL 8.
+- Caminhos do servidor, binário do Node, destino do deploy e particularidades
+  da conta ficam em `deploy/PRIVADO.md` — arquivo **local e git-ignorado**.
+  Nunca traga esses detalhes de volta para arquivos versionados.
+- A conta de hospedagem é compartilhada com outros sites. Nunca use
+  `rsync --delete` sem listar o destino antes; prefira extrair tarball, que
+  não apaga.
+- Respostas da produção podem vir de cache de CDN.
+- O alvo de produção está migrando para a VPS (ver `PLANO.md`). O modo
+  `hospedado` na hospedagem compartilhada não chegou a servir o domínio; o
+  motivo está em `deploy/ESTADO.md`.
 
 ## Convenções
 

@@ -19,11 +19,10 @@ definido, `NODE_ENV=production` já implica `hospedado`.
 - HTTPS funcionando, `http` e `https` respondem
 - Serve a **página padrão da Hostinger**, rodando PHP — o Node.js ainda não
   foi configurado, então `/api/saude` devolve 404
-- O tráfego passa pelo **CDN da Hostinger** (`Server: hcdn`), e o domínio
-  resolve para IPs do CDN, não para o IP da hospedagem. Isso significa que
-  respostas podem ser cacheadas: se um deploy parecer não ter efeito, limpe
-  o cache do CDN no hPanel antes de investigar o código.
-- `www` resolve via `cdn.hstgr.net`
+- O tráfego passa pelo **CDN da hospedagem**, e o domínio resolve para IPs
+  do CDN, não para o IP do servidor. Respostas podem ser cacheadas: se um
+  deploy parecer não ter efeito, limpe o cache do CDN no painel antes de
+  investigar o código.
 
 ## Antes do primeiro deploy
 
