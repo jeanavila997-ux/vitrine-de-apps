@@ -75,8 +75,8 @@ cor, ícone). `npm run db:seed` o carrega para a tabela `apps` e deriva,
 pela existência real no disco, o `status_instalado` (instalado/nao_instalado)
 e o estado inicial (`offline` ou `indisponivel`) de cada app. O registry é
 compartilhado entre máquinas: os 5 primeiros apps são desta máquina
-("Acer Nitro 5", usuário `C:\Users\Jean`) e os 5 seguintes, da máquina
-antiga (`C:\Users\Jeanc` / drive `F:`), estão com `ativo: 0, visivel: 0`
+(a máquina atual, onde este arquivo roda) e os 5 seguintes, da máquina
+antiga (outro usuário/drive), estão com `ativo: 0, visivel: 0`
 até voltarem a existir aqui — por isso não aparecem na UI nem na checagem
 de portas do validador.
 
