@@ -36,11 +36,11 @@ const upsert = db.prepare(`
   INSERT INTO apps (
     slug, nome, descricao, icone, cor, caminho, repositorio, branch,
     stack, tipo, comando_start, pid_file, porta, url_local, url_publica,
-    banco, tem_auth, ordem
+    banco, tem_auth, ordem, ativo, visivel
   ) VALUES (
     @slug, @nome, @descricao, @icone, @cor, @caminho, @repositorio, @branch,
     @stack, @tipo, @comando_start, @pid_file, @porta, @url_local, @url_publica,
-    @banco, @tem_auth, @ordem
+    @banco, @tem_auth, @ordem, @ativo, @visivel
   )
   ON CONFLICT (slug) DO UPDATE SET
     nome = excluded.nome,
@@ -59,13 +59,9 @@ const upsert = db.prepare(`
     url_publica = excluded.url_publica,
     banco = excluded.banco,
     tem_auth = excluded.tem_auth,
-    ordem = excluded.ordem
-`);
-
-const statusInicial = db.prepare(`
-  INSERT INTO app_status (app_id, estado, mensagem)
-  VALUES (?, ?, ?)
-  ON CONFLICT (app_id) DO NOTHING
+    ordem = excluded.ordem,
+    ativo = excluded.ativo,
+    visivel = excluded.visivel
 `);
 
 const gravarTudo = db.transaction((apps) => {
@@ -89,31 +85,49 @@ const gravarTudo = db.transaction((apps) => {
       banco: app.banco ?? null,
       tem_auth: app.tem_auth ?? 0,
       ordem: app.ordem ?? 0,
+      ativo: app.ativo ?? 1,
+      visivel: app.visivel ?? 1,
     });
   }
 });
 
 gravarTudo(registro.apps);
 
-// Marca como indisponível o que não existe no disco — a Estante mora no drive F:,
-// que nem sempre está montado.
+// Recalcula o estado de fábrica por existência real no disco — o seed é
+// idempotente: "instalado" e "indisponivel" dependem de ONDE ele roda, não
+// do que diz o JSON (que é compartilhado entre máquinas).
+// Mantém 'online' de quem já está no ar — o seed NÃO derruba processo.
+const statusUpsert = db.prepare(`
+  INSERT INTO app_status (app_id, estado, mensagem, verificado_em)
+  VALUES (?, ?, ?, datetime('now'))
+  ON CONFLICT (app_id) DO UPDATE SET
+    estado = excluded.estado,
+    mensagem = excluded.mensagem,
+    verificado_em = datetime('now')
+`);
+const marcaInstalacao = db.prepare('UPDATE apps SET status_instalado = ? WHERE id = ?');
+
 const gravados = db.prepare('SELECT id, slug, nome, caminho FROM apps ORDER BY ordem').all();
 
 console.log(`${gravados.length} apps no catálogo:\n`);
 for (const app of gravados) {
   const existe = fs.existsSync(app.caminho);
-  statusInicial.run(
-    app.id,
-    existe ? 'offline' : 'indisponivel',
-    existe ? null : `Pasta não encontrada: ${app.caminho}`
-  );
+  const atual = db.prepare('SELECT estado FROM app_status WHERE app_id = ?').get(app.id);
+
+  let estado = existe ? 'offline' : 'indisponivel';
+  let mensagem = existe ? null : `Pasta não encontrada: ${app.caminho}`;
+  if (existe && atual?.estado === 'online') estado = 'online';
+
+  statusUpsert.run(app.id, estado, mensagem);
+  marcaInstalacao.run(existe ? 'instalado' : 'nao_instalado', app.id);
+
   const marca = existe ? 'ok        ' : 'AUSENTE   ';
   console.log(`  ${marca} ${app.nome.padEnd(22)} ${app.caminho}`);
 }
 
 const ausentes = gravados.filter((a) => !fs.existsSync(a.caminho));
 if (ausentes.length) {
-  console.log(`\n${ausentes.length} app(s) com pasta ausente — marcados como 'indisponivel'.`);
+  console.log(`\n${ausentes.length} app(s) com pasta ausente neste máquina — marcados como 'indisponivel' / 'nao_instalado'.`);
 }
 
 fecharSqlite();

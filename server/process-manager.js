@@ -33,6 +33,24 @@ function resolverComando(app) {
   return { executavel: cmd.executavel, argumentos };
 }
 
+/**
+ * Adapta o comando às regras do spawn no Windows:
+ * - 'node' → o MESMO binário deste processo (process.execPath): não depende
+ *   do PATH herdado, que varia quando o servidor é lançado por shell/launcher.
+ * - '*.cmd'/*.bat → spawn sem shell NÃO executa (CreateProcess não interpreta
+ *   PATHEXT), entao sobe via cmd.exe /d /s /c. Os argumentos vêm da allowlist
+ *   estática e de cams do registro — superfície controlada, sem entrada livre.
+ */
+function adaptarAoWindows(comando) {
+  if (comando.executavel === 'node') {
+    return { ...comando, executavel: process.execPath };
+  }
+  if (/\.(cmd|bat)$/i.test(comando.executavel)) {
+    return { ...comando, executavel: 'cmd.exe', argumentos: ['/d', '/s', '/c', comando.executavel, ...comando.argumentos] };
+  }
+  return comando;
+}
+
 /** Retorna o PID do processo que escuta numa porta, ou null se ninguém escuta. */
 function pidDaPorta(porta) {
   if (!porta) return null;
@@ -51,6 +69,54 @@ function pidDaPorta(porta) {
         resolve(Number.isInteger(pid) && pid > 0 ? pid : null);
       }
     );
+  });
+}
+
+/**
+ * Checa várias portas com UMA única chamada ao netstat (em vez de um
+ * PowerShell por porta — que custa ~1 s cada). Retorna Map: porta -> pid.
+ * Porta sem ouvinte não entra no mapa.
+ */
+export async function pidsDasPortas(portas) {
+  const alvo = new Set(portas.filter(Number.isInteger));
+  const mapa = new Map();
+  if (!alvo.size) return mapa;
+
+  const saida = await new Promise((resolve) => {
+    execFile(
+      'netstat.exe',
+      ['-ano', '-p', 'tcp'],
+      { windowsHide: true, timeout: 10000 },
+      (erro, stdout) => resolve(erro ? '' : String(stdout))
+    );
+  });
+
+  // Linha típica: "  TCP    127.0.0.1:4400    0.0.0.0:0    LISTENING       19756"
+  const re = /(?:0\.0\.0\.0|127\.0\.0\.1|\[::\]):(\d+)\s+\S+\s+LISTENING\s+(\d+)/g;
+  for (const m of saida.matchAll(re)) {
+    const porta = Number(m[1]);
+    const pid = Number(m[2]);
+    if (alvo.has(porta) && !mapa.has(porta) && pid > 0 && pid !== 4) mapa.set(porta, pid);
+  }
+  return mapa;
+}
+
+/**
+ * Status de vários apps de uma vez (usado por GET /api/apps?live=1).
+ * Porta resolvida em lote; apps sem porta caem no processo lançado pela
+ * própria Vitrine, como em verificarStatus.
+ */
+export async function verificarVarios(apps) {
+  const mapa = await pidsDasPortas(apps.map((a) => a.porta).filter(Boolean));
+  return apps.map((app) => {
+    if (app.porta) {
+      const pid = mapa.get(app.porta) ?? null;
+      // PID 4 (System) = artefato do HTTP.sys; cai no pid_file quando houver.
+      return { slug: app.slug, online: Boolean(pid && pid !== 4), pid: pid === 4 ? null : pid };
+    }
+    const proc = processos.get(app.slug);
+    const vivo = proc && proc.exitCode === null;
+    return { slug: app.slug, online: Boolean(vivo), pid: vivo ? proc.pid : null };
   });
 }
 
@@ -101,9 +167,20 @@ export async function verificarStatus(app) {
 
 /** Inicia um app. Retorna {ok, mensagem, pid}. */
 export async function iniciarApp(app) {
-  const comando = resolverComando(app);
-  if (!comando) {
+  const comandoSpawn = resolverComando(app);
+  if (!comandoSpawn) {
     return { ok: false, mensagem: `Sem comando de start registrado para "${app.slug}".` };
+  }
+
+  // Pasta tem que existir: o cwd do spawn depende dela. Spawn com cwd
+  // inexistente falha de forma assíncrona (ENOENT) e sem esta guarda o app
+  // receberia "iniciado" falso quando a porta estiver ocupada por outro
+  // processo qualquer que escute lá.
+  if (!fs.existsSync(app.caminho)) {
+    return {
+      ok: false,
+      mensagem: `${app.nome} está indisponível: a pasta ${app.caminho} não existe nesta máquina.`,
+    };
   }
 
   // Já está no ar?
@@ -112,25 +189,72 @@ export async function iniciarApp(app) {
     return { ok: false, mensagem: `${app.nome} já está online (PID ${atual.pid}).` };
   }
 
+  // O 'error' do spawn é assíncrono e não é capturado pelo try/catch — sem
+  // listener ele derruba o processo Node inteiro (unhandled 'error').
+  // Guardamos o motivo para diferenciar "spawn falhou" de "porta não abriu".
+  let erroSpawn = null;
+
   try {
+    const comando = adaptarAoWindows(comandoSpawn);
+
+    // Saída do app vai para data/logs/<slug>.log — painel "Saída do processo"
+    // e diagnóstico pós-morte (com stdio 'ignore' um crash fica invisível).
+    const dirLog = path.join(ROOT, 'data', 'logs');
+    fs.mkdirSync(dirLog, { recursive: true });
+    const fdLog = fs.openSync(path.join(dirLog, `${app.slug}.log`), 'a');
+    fs.writeSync(fdLog, `\n[${new Date().toISOString()}] iniciar via vitrine: ${comando.executavel} ${comando.argumentos.join(' ')}\n`);
+
     const filho = spawn(comando.executavel, comando.argumentos, {
       cwd: app.caminho,
       detached: true,
       windowsHide: true,
-      stdio: 'ignore',
+      stdio: ['ignore', fdLog, fdLog],
+      // Ambiente sanitizado: o processo da Vitrine herdou PORT/.env próprios,
+      // e apps child (ex.: chat-ia) leem o MESMO nome de variável — herança
+      // crua faz o filho tentar a porta da Vitrine e morrer de EADDRINUSE.
+      // A porta certa é a declarada no catálogo do app; sem porta, remove-se
+      // a variável para o app usar o default dele.
+      env: (() => {
+        const env = { ...process.env };
+        if (app.porta) env.PORT = String(app.porta);
+        else delete env.PORT;
+        return env;
+      })(),
     });
 
-    // O evento 'error' é assíncrono e não é capturado pelo try/catch — sem um
-    // listener ele derruba o processo Node inteiro (unhandled 'error').
     filho.on('error', (erro) => {
       console.error(`[process-manager] Falha ao spawnar ${app.slug}:`, erro.message);
+      erroSpawn = erro;
     });
+
+    filho.on('exit', (codigo, sinal) => {
+      fs.appendFile(path.join(dirLog, `${app.slug}.log`), `[${new Date().toISOString()}] processo saiu (code=${codigo}, signal=${sinal ?? 'none'})\n`, () => {});
+      processos.delete(app.slug);
+    });
+
+    // O fd é duplicado para o filho — fechamos a cópia do pai imediatamente.
+    fs.closeSync(fdLog);
 
     filho.unref();
     processos.set(app.slug, filho);
 
-    // Dá um tempo para o processo subir e a porta abrir.
+    // Dá um tempo para o processo subir e a porta abrir. É suficiente para
+    // ENOENT (cwd/executável inexistente) chegar no listener acima.
     await new Promise((r) => setTimeout(r, 1500));
+
+    if (erroSpawn) {
+      processos.delete(app.slug);
+      // Se a porta já é ocupada por outrem, dizer isso evita o "iniciado"
+      // falso: a vitrine NÃO é quem colocou o app no ar.
+      const outro = app.porta ? await pidDaPorta(app.porta) : null;
+      return {
+        ok: false,
+        mensagem: outro
+          ? `${app.nome}: falha ao spawnar o comando (${erroSpawn.code ?? erroSpawn.message}) e a porta ${app.porta} já é ocupada pelo PID ${outro} — o app pode estar no ar por fora da Vitrine.`
+          : `Falha ao iniciar ${app.nome}: ${erroSpawn.message}`,
+      };
+    }
+
     const status = await verificarStatus(app);
 
     if (status.online) {
@@ -185,6 +309,32 @@ export async function pararApp(app) {
  */
 export async function executarAcao({ app, acao, origem = 'ui', usuarioId = null }) {
   const inicio = Date.now();
+
+  // Guarda: pasta inexistente = app indisponível NESTA máquina. Sem ela, um
+  // "iniciar" falharia no spawn e ainda sobrescreveria o estado
+  // 'indisponivel' por 'offline' (o estado só existe enquanto a pasta existe).
+  if (!fs.existsSync(app.caminho)) {
+    const mensagem = `${app.nome} está indisponível nesta máquina (pasta não encontrada: ${app.caminho}).`;
+    // Auditoria: a tentativa entra no histórico mesmo recusada (o teste
+    // agente-controle depende disso), mas o app_status NÃO é tocado —
+    // "indisponivel" significa pasta inexistente, não offline.
+    registrarExecucao({
+      appId: app.id,
+      usuarioId,
+      acao,
+      origem,
+      sucesso: false,
+      mensagem,
+      duracaoMs: Date.now() - inicio,
+    });
+    return {
+      ok: false,
+      mensagem,
+      estado: app.estado ?? 'indisponivel',
+      pid: app.pid ?? null,
+    };
+  }
+
   let resultado;
 
   if (acao === 'iniciar') {

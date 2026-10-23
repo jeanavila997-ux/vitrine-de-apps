@@ -217,7 +217,8 @@ SELECT
   a.id, a.slug, a.nome, a.descricao, a.icone, a.cor, a.stack, a.tipo,
   a.porta, a.url_local, a.url_publica, a.repositorio, a.caminho, a.ordem,
   a.comando_start, a.pid_file,
-  COALESCE(s.estado, 'offline') AS estado_runtime,
+  -- Alinhado com schema.mysql.sql: a UI e o agente leem `estado`.
+  COALESCE(s.estado, 'offline') AS estado,
   s.pid, s.porta_efetiva, s.mensagem, s.iniciado_em, s.verificado_em,
   -- Novos campos de status de catálogo
   a.status_instalado,

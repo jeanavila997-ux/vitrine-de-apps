@@ -20,8 +20,10 @@ let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.g
 // Dados
 // ------------------------------------------------------------
 async function carregar() {
+  // live=1: o servidor checa as portas de verdade (um netstat) antes de
+  // responder, em vez de ler o último estado gravado no banco.
   const [resApps, resAtiv] = await Promise.all([
-    fetch('/api/apps').then((r) => r.json()),
+    fetch('/api/apps?live=1').then((r) => r.json()),
     fetch('/api/atividade?limite=10').then((r) => r.json()),
   ]);
   estado.apps = resApps.apps;
@@ -36,15 +38,18 @@ const badge = (est) =>
   `<span class="vd-status vd-status--${est}"><span class="dot"></span>${ESTADOS[est] ?? est}</span>`;
 
 function cardApp(app) {
+  const instalado = app.status_instalado !== 'nao_instalado';
   const acao =
     app.estado === 'online'
       ? `<button class="vd-btn vd-btn--sm vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
       : app.estado === 'indisponivel'
-        ? `<span class="vd-appcard__port">${esc(app.caminho.slice(0, 22))}…</span>`
-        : `<button class="vd-btn vd-btn--sm vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`;
+        ? `<span class="vd-appcard__port">pasta ausente…</span>`
+        : instalado
+          ? `<button class="vd-btn vd-btn--sm vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`
+          : `<span class="vd-appcard__port">não instalado</span>`;
 
   return `
-    <article class="vd-appcard vd-appcard--${app.estado}" style="--app-color:${esc(app.cor ?? '#cc785c')}" data-slug="${esc(app.slug)}">
+    <article class="vd-appcard vd-appcard--${esc(app.estado)} ${instalado ? '' : 'vd-appcard--indisponivel'}" style="--app-color:${esc(app.cor ?? '#cc785c')}" data-slug="${esc(app.slug)}">
       <div class="vd-appcard__head">
         <div class="vd-appcard__icon">${esc(app.icone ?? '📦')}</div>
         <div class="vd-appcard__titles">
@@ -72,8 +77,8 @@ function telaDashboard() {
     ? `<div class="vd-alert vd-alert--warning">
          <span class="vd-alert__icon">⚠</span>
          <div class="vd-alert__body">
-           <strong>${indisponiveis.length} app(s) com pasta não encontrada</strong>
-           ${indisponiveis.map((a) => esc(a.nome)).join(', ')} — verifique se o drive está conectado.
+           <strong>${indisponiveis.length} app(s) sem pasta nesta máquina</strong>
+           ${indisponiveis.map((a) => esc(a.nome)).join(', ')} — o caminho do catálogo não existe no disco.
          </div>
        </div>`
     : '';
@@ -131,6 +136,27 @@ function telaDashboard() {
     </section>`;
 }
 
+async function carregarLogs(slug) {
+  try {
+    const dados = await fetch(`/api/apps/${encodeURIComponent(slug)}/logs`).then((r) => r.json());
+    // O usuário pode ter navegado já — só pinta o painel da tela certa.
+    if (estado.rota !== `app:${slug}`) return;
+    const alvo = document.getElementById('app-logs');
+    if (!alvo) return;
+    if (dados.mensagem) {
+      alvo.innerHTML = `<div class="vd-vazio">${esc(dados.mensagem)}</div>`;
+      return;
+    }
+    const itens = dados.itens ?? [];
+    alvo.innerHTML = itens.length
+      ? `<pre class="vd-applog__pre">${esc(itens.join('\n'))}</pre>`
+      : '<div class="vd-vazio">Log vazio até agora.</div>';
+  } catch {
+    const alvo = document.getElementById('app-logs');
+    if (alvo) alvo.innerHTML = '<div class="vd-vazio">Falha ao carregar o log.</div>';
+  }
+}
+
 function telaApp(slug) {
   const app = estado.apps.find((a) => a.slug === slug);
   if (!app) return '<div class="vd-placeholder">App não encontrado.</div>';
@@ -152,7 +178,7 @@ function telaApp(slug) {
         ${
           app.estado === 'online'
             ? `<button class="vd-btn vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
-            : app.estado === 'indisponivel'
+            : app.estado === 'indisponivel' || app.status_instalado === 'nao_instalado'
               ? ''
               : `<button class="vd-btn vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`
         }
@@ -170,7 +196,7 @@ function telaApp(slug) {
         <div class="vd-panel">
           <div class="vd-panel__head"><h3 class="vd-panel__title">Saída do processo</h3></div>
           <div class="vd-panel__body">
-            <div class="vd-vazio">O app não está em execução. Os logs aparecem aqui quando ele sobe.</div>
+            <div class="vd-applog" id="app-logs"><div class="vd-vazio">Consultando log…</div></div>
           </div>
         </div>
         <div class="vd-panel">
@@ -189,6 +215,7 @@ function telaApp(slug) {
               <dt>Tipo</dt><dd>${esc(app.tipo)}</dd>
               <dt>Porta</dt><dd>${app.porta ?? '—'}</dd>
               <dt>Estado</dt><dd>${ESTADOS[app.estado] ?? app.estado}</dd>
+              <dt>Instalação</dt><dd>${esc(app.status_instalado_nome ?? '—')}</dd>
               <dt>Verificado</dt><dd>${esc(app.verificado_em ?? '—')}</dd>
             </dl>
           </div>
@@ -340,7 +367,7 @@ function montarMenuApps() {
   $('#nav-apps').innerHTML = estado.apps
     .map(
       (a) => `
-      <a class="vd-navitem ${a.estado === 'indisponivel' ? 'vd-navitem--muted' : ''}" data-rota="app:${esc(a.slug)}">
+      <a class="vd-navitem ${a.estado === 'indisponivel' || a.status_instalado === 'nao_instalado' ? 'vd-navitem--muted' : ''}" data-rota="app:${esc(a.slug)}">
         <span class="vd-navitem__icon">${esc(a.icone ?? '📦')}</span>
         <span class="vd-navitem__label">${esc(a.nome)}</span>
         <span class="vd-navitem__dot vd-navitem__dot--${a.estado}"></span>
@@ -367,6 +394,7 @@ function navegar(rota) {
     $('#titulo').textContent = app?.nome ?? 'Aplicativo';
     $('#subtitulo').textContent = '· Aplicativos';
     $('#conteudo').innerHTML = telaApp(slug);
+    carregarLogs(slug);
   } else if (rota === 'agente') {
     $('#titulo').textContent = 'Agente';
     $('#subtitulo').textContent = '· Chat e comandos CLI';

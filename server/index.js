@@ -1,5 +1,6 @@
 // Servidor da Vitrine de Apps — API + interface.
 // http://127.0.0.1:4400 · catálogo público em https://jeanavila997-ux.github.io/vitrine-de-apps/
+import fs from 'node:fs';
 import path from 'node:path';
 import express from 'express';
 import { config, ROOT, origensPermitidas, validarConfig } from './config.js';
@@ -12,9 +13,10 @@ import {
   buscarAppPorModo,
   atividadeRecentePorModo,
   testarMySql,
+  registrarStatus,
 } from './db.js';
 import { processarMensagem, historicoChat, listarModelosOllama, limparConversaDify } from './agente.js';
-import { executarAcao, verificarStatus } from './process-manager.js';
+import { executarAcao, verificarStatus, verificarVarios } from './process-manager.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -59,6 +61,33 @@ app.get('/api/saude', (req, res) => {
 app.get('/api/apps', async (req, res, next) => {
   try {
     const apps = await listarAppsPorModo();
+
+    // ?live=1 (só modo local): checa a porta de cada app AGORA, com uma
+    // única chamada de netstat, e grava o resultado — o dashboard deixa de
+    // depender do último estado gravado no banco.
+    if (config.podeControlarProcessos && ['1', 'true'].includes(String(req.query.live ?? ''))) {
+      const vivos = await verificarVarios(apps);
+      for (const v of vivos) {
+        const app = apps.find((a) => a.slug === v.slug);
+        if (!app) continue;
+
+        let estado;
+        if (v.online) estado = 'online';
+        // 'indisponivel' = pasta inexistente nesta máquina; nenhuma porta
+        // checada transforma isso em offline (o guard do executarAcao e o
+        // seed dependem dessa distinção).
+        else if (app.estado === 'indisponivel') estado = 'indisponivel';
+        else estado = 'offline';
+
+        app.estado = estado;
+        app.pid = v.online ? v.pid : null;
+
+        if (estado !== 'indisponivel') {
+          registrarStatus({ appId: app.id, estado, pid: app.pid });
+        }
+      }
+    }
+
     const contagem = apps.reduce((acc, a) => {
       acc[a.estado] = (acc[a.estado] ?? 0) + 1;
       return acc;
@@ -143,6 +172,25 @@ app.get('/api/apps/:slug/status', async (req, res, next) => {
     res.json({ slug: app_.slug, estado: status.online ? 'online' : 'offline', pid: status.pid });
   } catch (erro) {
     next(erro);
+  }
+});
+
+// Últimas linhas do log do app (data/logs/<slug>.log, alimentado quando a
+// Vitrine lança o processo). Só slug simples — sem path traversal.
+app.get('/api/apps/:slug/logs', async (req, res) => {
+  if (!/^\w[\w-]*$/.test(req.params.slug) || !config.podeControlarProcessos) {
+    return res.status(400).json({ erro: 'Disponível só no modo local.' });
+  }
+  const caminho = path.join(ROOT, 'data', 'logs', `${req.params.slug}.log`);
+  if (!fs.existsSync(caminho)) {
+    return res.json({ itens: [], mensagem: 'O app nunca foi lançado pela Vitrine — sem log.' });
+  }
+  try {
+    const linhas = fs.readFileSync(caminho, 'utf8').split(/\r?\n/);
+    const itens = linhas.slice(-100);
+    res.json({ itens, arquivo: caminho });
+  } catch (erro) {
+    res.status(500).json({ erro: erro.message });
   }
 });
 

@@ -71,9 +71,25 @@ corrigir: iniciar/parar apps só existe no modo local, por construção.
 ### Catálogo
 
 `server/apps-registry.json` é a definição dos apps (caminho, porta, comando,
-cor, ícone). `npm run db:seed` o carrega para a tabela `apps` e marca como
-`indisponivel` o que não existe no disco — a Estante de Ebooks mora em `F:`,
-que nem sempre está montado.
+cor, ícone). `npm run db:seed` o carrega para a tabela `apps` e deriva,
+pela existência real no disco, o `status_instalado` (instalado/nao_instalado)
+e o estado inicial (`offline` ou `indisponivel`) de cada app. O registry é
+compartilhado entre máquinas: os 5 primeiros apps são desta máquina
+("Acer Nitro 5", usuário `C:\Users\Jean`) e os 5 seguintes, da máquina
+antiga (`C:\Users\Jeanc` / drive `F:`), estão com `ativo: 0, visivel: 0`
+até voltarem a existir aqui — por isso não aparecem na UI nem na checagem
+de portas do validador.
+
+### Ambiente dos processos child
+
+O servidor (e o launcher) exportam `PORT=4400` no `process.env`; apps que
+usam a mesma variável (chat-ia) herdariam a porta ERRADA ao serem
+spawnados e morrem de `EADDRINUSE`. O `process-manager.js` injeta
+explicitamente `PORT` = a porta do catálogo no env dos filhos (e remove a
+variável para apps sem porta), resolve `node` para o `process.execPath` e
+sobe `.cmd`/`.bat` via `cmd.exe` — spawn sem shell no Windows não executa.
+Saída dos apps child vai para `data/logs/<slug>.log` (rota
+`GET /api/apps/:slug/logs`, painel "Saída do processo").
 
 ### Schema
 

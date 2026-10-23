@@ -81,19 +81,31 @@ test('execuções do agente ficam registradas com origem agente', async () => {
   process.env.SQLITE_PATH = TMP;
   aplicarSchemaSqlite();
   const db = abrirSqlite();
-  // App com comando_start registrado na allowlist: o spawn falha (caminho
-  // inexistente), mas executarAcao registra a tentativa com origem 'agente'.
+  // App com comando_start registrado na allowlist e caminho inexistente:
+  // executarAcao recusa o spawn (guarda de pasta) MAS registra a tentativa
+  // na auditoria com origem 'agente', sem corromper o estado indisponivel.
   db.prepare(
     `INSERT INTO apps (slug, nome, caminho, tipo, comando_start, ordem)
      VALUES ('app-start-fantasma', 'App Start Fantasma', 'C:\\nao-existe', 'web', 'estante_dev', 97)
      ON CONFLICT (slug) DO UPDATE SET comando_start = 'estante_dev'`
   ).run();
+  const id = db.prepare(`SELECT id FROM apps WHERE slug = 'app-start-fantasma'`).get().id;
+  db.prepare(
+    `INSERT INTO app_status (app_id, estado, mensagem) VALUES (?, 'indisponivel', 'test')
+     ON CONFLICT (app_id) DO UPDATE SET estado = 'indisponivel'`
+  ).run(id);
+
   try {
     await processarMensagem({ conteudo: 'iniciar app-start-fantasma' });
     const execucao = db
-      .prepare(`SELECT origem FROM execucoes WHERE origem = 'agente' ORDER BY id DESC LIMIT 1`)
+      .prepare(`SELECT origem, sucesso, mensagem FROM execucoes WHERE origem = 'agente' ORDER BY id DESC LIMIT 1`)
       .get();
     assert.ok(execucao, 'deveria existir execução com origem agente');
+    assert.ok(!execucao.sucesso, 'a execução deveria ter sucesso=0 (guard de pasta ausente)');
+
+    // O estado 'indisponivel' deve continuar intacto (não virar offline).
+    const status = db.prepare(`SELECT estado FROM app_status WHERE app_id = ?`).get(id);
+    assert.equal(status.estado, 'indisponivel', 'guard não deve sobrescrever indisponivel');
   } finally {
     db.prepare(`DELETE FROM apps WHERE slug = 'app-start-fantasma'`).run();
     fecharSqlite();

@@ -86,16 +86,13 @@ test('db:init e db:seed funcionam em banco novo', () => {
   }
 });
 
-test('registry atual: colisão conhecida da issue #4 segue detectada', () => {
-  // O registry ainda tem Estante e Cruzamento Bovinos na 5173 — a correção
-  // depende de decisão de portas (issue #4). Enquanto isso, a validação
-  // precisa continuar detectando-a, não silenciá-la.
+test('registry atual: sem colisão de porta entre apps visíveis', () => {
+  // Desde o re-catalogo da máquina atual (23/10/2026) os apps da máquina
+  // antiga estão com visivel=0, então não há colisão visível. Se alguém
+  // reativa dois apps na mesma porta, o db:seed avisa (e --estrito falha).
   const { ok, avisos } = validarRegistro(registry);
-  assert.ok(!ok, 'a colisão da 5173 deveria ser detectada');
-  assert.ok(
-    avisos.some((a) => a.includes('5173')),
-    `esperado aviso da porta 5173 em:\n${avisos.join('\n')}`
-  );
+  assert.equal(avisos.length, 0, `registry deveria estar limpo:\n\n${avisos.join('\n')}`);
+  assert.ok(ok);
 });
 
 test('portasDuplicadas detecta a colisão e ignora apps invisíveis', () => {
@@ -120,7 +117,12 @@ test('db:seed --estrito falha quando o registry tem colisão de portas', () => {
       fs.readFileSync(path.join(ROOT, 'server', 'apps-registry.json'), 'utf8')
     );
     const boi = registro.apps.find((a) => a.slug === 'cruzamento-bovinos');
-    boi.porta = registro.apps.find((a) => a.slug === 'estante-de-ebooks').porta;
+    const estante = registro.apps.find((a) => a.slug === 'estante-de-ebooks');
+    boi.porta = estante.porta;
+    // Os dois app agora estão visivel=0 (máquina antiga) — reativa-os no
+    // cenário sintético, pois a colisão só importa entre apps visíveis.
+    boi.visivel = 1;
+    estante.visivel = 1;
     fs.writeFileSync(registryAlterado, JSON.stringify(registro, null, 2) + '\n');
 
     let falhou = false;
@@ -163,9 +165,11 @@ test('app_status só aceita estados do CHECK do schema', () => {
     const { execFileSync: run } = { execFileSync };
     const saida = run(
       process.execPath,
-      ['-e', `
+      // --input-type=module: -e é CJS por padrão, e await no topo exige ESM.
+      ['--input-type=module', '-e', `
         process.env.SQLITE_PATH = ${JSON.stringify(dbPath)};
-        const { abrirSqlite, fecharSqlite } = await import('${path.join(ROOT, 'server/db.js').replaceAll('\\', '/')}');
+        const { pathToFileURL } = await import('node:url');
+        const { abrirSqlite, fecharSqlite } = await import(pathToFileURL(${JSON.stringify(path.join(ROOT, 'server/db.js'))}).href);
         const db = abrirSqlite();
         const apps = db.prepare('SELECT id FROM apps ORDER BY ordem').all();
         let rejeitou = false;
