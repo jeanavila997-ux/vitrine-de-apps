@@ -113,6 +113,28 @@
       "observacoes": "Sem git (não é repositório). Depende do Ollama local e do Obsidian aberto."
 
     },
+    {
+      "slug": "rotina-leve-playbook",
+      "nome": "Rotina Leve Playbook",
+      "descricao": "E-book de 31 capítulos sobre rotina, com página de vendas e checkout.",
+      "icone": "📘",
+      "cor": "#22c55e",
+      "caminho": "C:\\Users\\Jean\\Projetos\\rotina-leve-playbook",
+      "repositorio": "https://github.com/jeanavila997-ux/rotina-leve-playbook",
+      "branch": "main",
+      "stack": "Site estático · checkout Cakto · Meta Pixel",
+      "tipo": "web",
+      "comando_start": null,
+      "porta": null,
+      "url_local": null,
+      "url_publica": "https://rotinaleve.com.br",
+      "banco": null,
+      "tem_auth": 0,
+      "ativo": 1,
+      "visivel": 1,
+      "ordem": 6,
+      "observacoes": "Produto à venda: o card público ganha botão Abrir para a página de vendas. Caminho local presumido pelo padrão Projetos/ — se a pasta não existir, o db:seed marca indisponível. Pendente: confirmar funil ponta a ponta (página de vendas, Pixel ligado à Cakto com evento de compra, captura de leads)."
+    },
 
     {
       "slug": "mult-chat-hub",

@@ -74,11 +74,11 @@ corrigir: iniciar/parar apps só existe no modo local, por construção.
 cor, ícone). `npm run db:seed` o carrega para a tabela `apps` e deriva,
 pela existência real no disco, o `status_instalado` (instalado/nao_instalado)
 e o estado inicial (`offline` ou `indisponivel`) de cada app. O registry é
-compartilhado entre máquinas: os 5 primeiros apps são desta máquina
-(a máquina atual, onde este arquivo roda) e os 5 seguintes, da máquina
-antiga (outro usuário/drive), estão com `ativo: 0, visivel: 0`
-até voltarem a existir aqui — por isso não aparecem na UI nem na checagem
-de portas do validador.
+compartilhado entre máquinas: os apps com `ativo: 1` são desta máquina
+(a máquina atual, onde este arquivo roda) e os 5 da máquina antiga
+(outro usuário/drive) estão com `ativo: 0, visivel: 0`
+até voltarem a existir aqui — por isso não aparecem na UI, no catálogo
+público nem na checagem de portas do validador.
 
 ### Ambiente dos processos child
 
@@ -105,7 +105,12 @@ outro.
 `docs/index.html` é gerado por `scripts/build-pages.mjs` a partir de
 `server/apps-registry.json` — sem status ao vivo, sem banco: é só a lista de
 apps pra quem só tem o link público. Rode `npm run pages:build` e commite o
-resultado sempre que o registry mudar (não é gerado em CI).
+resultado sempre que o registry mudar (não é gerado em CI) — o teste
+`server/test/pages.test.js` falha se `docs/index.html` ficar desatualizado.
+
+Regras do build: entram só apps com `visivel != 0`; o botão "Abrir" aparece
+quando há `url_publica` https (produtos à venda, como o Rotina Leve, viram
+vitrine); "Código-fonte" só quando há `repositorio`.
 
 No GitHub, em **Settings → Pages**, a fonte precisa estar como "Deploy from a
 branch", branch `main`, pasta `/docs` — é um toggle manual, único, que
