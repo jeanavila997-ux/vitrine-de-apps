@@ -1,0 +1,40 @@
+{
+  "_comentario": "Ligações reais entre apps DESTA máquina. A UI lê este arquivo em GET /api/ligacoes. Não é automação: só explica quem inicia quem. Slugs têm de existir em apps-registry.json.",
+  "ligacoes": [
+    {
+      "origem": "vitrine-de-apps",
+      "destino": "chat-ia",
+      "nome": "Sobe o Chat IA",
+      "tipo": "api",
+      "descricao": "O botão Iniciar roda node server.js na pasta do Chat IA. A porta injetada é 7788, nunca a 4400 da vitrine."
+    },
+    {
+      "origem": "vitrine-de-apps",
+      "destino": "mestre-do-pc",
+      "nome": "Dispara o launcher",
+      "tipo": "api",
+      "descricao": "Roda start-mestre-v10.ps1. O processo se eleva (UAC) e a vitrine confere a porta 7777, não o PID do spawn."
+    },
+    {
+      "origem": "vitrine-de-apps",
+      "destino": "cruzamento-bovinos",
+      "nome": "Sobe o Vite do CattleGen",
+      "tipo": "api",
+      "descricao": "npm run dev na pasta C:\\Users\\Jean\\app-cruzamento-bovinos. O Vite escuta em 127.0.0.1:5173."
+    },
+    {
+      "origem": "vitrine-de-apps",
+      "destino": "nexo-lab",
+      "nome": "Sobe o Vite do NEXO Lab",
+      "tipo": "api",
+      "descricao": "npm run dev na porta 3000. O proxy /api aponta para 127.0.0.1:8080, mas a API (npm run api) não sobe junto."
+    },
+    {
+      "origem": "nexo-lab",
+      "destino": "nexo-core",
+      "nome": "Mesma família Nexo",
+      "tipo": "recurso_compartilhado",
+      "descricao": "O Lab é a bancada visual; o Core é o catálogo MCP em stdio (node nexo.mjs serve-stdio). Não compartilham porta."
+    }
+  ]
+}

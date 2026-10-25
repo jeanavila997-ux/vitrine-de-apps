@@ -73,12 +73,12 @@ corrigir: iniciar/parar apps só existe no modo local, por construção.
 `server/apps-registry.json` é a definição dos apps (caminho, porta, comando,
 cor, ícone). `npm run db:seed` o carrega para a tabela `apps` e deriva,
 pela existência real no disco, o `status_instalado` (instalado/nao_instalado)
-e o estado inicial (`offline` ou `indisponivel`) de cada app. O registry é
-compartilhado entre máquinas: os 5 primeiros apps são desta máquina
-(a máquina atual, onde este arquivo roda) e os 5 seguintes, da máquina
-antiga (outro usuário/drive), estão com `ativo: 0, visivel: 0`
-até voltarem a existir aqui — por isso não aparecem na UI nem na checagem
-de portas do validador.
+e o estado inicial (`offline` ou `indisponivel`) de cada app. Apps desta
+máquina (Acer Nitro, `C:\Users\Jean`) ficam com `visivel: 1`. Os da máquina
+antiga (`C:\Users\Jeanc`, drive F:) ficam com `ativo: 0, visivel: 0` —
+não entram na UI nem na checagem de portas. O Cruzamento visível é
+`C:\Users\Jean\app-cruzamento-bovinos` (porta 5173). O NEXO Lab usa a 3000.
+Ligações entre apps: `server/ligacoes.json` (`GET /api/ligacoes`).
 
 ### Ambiente dos processos child
 

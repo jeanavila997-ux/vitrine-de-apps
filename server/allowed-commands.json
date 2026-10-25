@@ -24,7 +24,12 @@
     "bovinos_dev": {
       "executavel": "npm",
       "argumentos": ["run", "dev"],
-      "descricao": "Sobe o Cruzamento Bovinos"
+      "descricao": "Sobe o Vite do Cruzamento Bovinos em 127.0.0.1:5173"
+    },
+    "nexo_lab_dev": {
+      "executavel": "npm",
+      "argumentos": ["run", "dev"],
+      "descricao": "Sobe o Vite do NEXO Lab em 127.0.0.1:3000"
     },
     "boicontrol_dev": {
       "executavel": "npm",

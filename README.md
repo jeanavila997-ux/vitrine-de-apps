@@ -71,14 +71,18 @@ app no Dify está em `docs/dify-setup.md`.
 
 ## Os aplicativos
 
-| App | Porta | Tipo | Repositório |
+| App | Porta | Tipo | Onde está |
 |---|---|---|---|
-| MULT-CHAT-HUB | 3001 | híbrido | `avila2026/MULT-CHAT-HUB` |
-| Estante de Ebooks | 5173 | híbrido | `jeanavila997-ux/Estante-de-Ebooks` |
-| Cruzamento Bovinos | 5173 | web | `avila2026/app-cruzamento-bovinos` |
-| Mestre do PC V10 | 7777 | serviço | `jeanavila997-ux/Mestre-do-PC-V10` |
-| BoiControl | 8080 | web | `jeanavila997-ux/boicontrol` |
-| HomeoVet | — | desktop | `jeanavila997-ux/homeovet` |
+| Chat IA | 7788 | web | `Projetos\chat-ia` |
+| Mestre do PC V10 | 7777 | serviço | `Projetos\Mestre-do-PC-V10` |
+| Vitrine (este app) | 4400 | serviço | `ProjetosPessoais\vitrine-de-apps` |
+| Nexo Core | — | serviço | `Projetos\nexo-core` (stdio, sem HTTP) |
+| Agente Obsidian | — | desktop | `Projetos\agente-obsidian` |
+| Cruzamento Bovinos | 5173 | híbrido | `C:\Users\Jean\app-cruzamento-bovinos` |
+| NEXO Lab | 3000 | híbrido | `C:\Users\Jean\nexo-lab` |
+| REA | — | serviço | `C:\Users\Jean\rea` |
+
+MULT-CHAT-HUB, Estante, BoiControl e HomeoVet continuam no registry com `visivel: 0` (caminhos da máquina antiga).
 
 O HomeoVet é um agente de IA em Python para terminal — sem servidor nem
 porta, por isso não tem botão de iniciar na Vitrine.

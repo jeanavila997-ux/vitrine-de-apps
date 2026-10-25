@@ -13,7 +13,7 @@ const ESTADOS = {
   indisponivel: 'indisponível',
 };
 
-let estado = { apps: [], contagem: {}, rota: 'dashboard' };
+let estado = { apps: [], contagem: {}, rota: 'dashboard', ligacoes: [], busca: '', filtro: 'todos' };
 let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.getItem('vd_ollama_modelo') || '' };
 
 // ------------------------------------------------------------
@@ -22,13 +22,30 @@ let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.g
 async function carregar() {
   // live=1: o servidor checa as portas de verdade (um netstat) antes de
   // responder, em vez de ler o último estado gravado no banco.
-  const [resApps, resAtiv] = await Promise.all([
+  const [resApps, resAtiv, resLig] = await Promise.all([
     fetch('/api/apps?live=1').then((r) => r.json()),
-    fetch('/api/atividade?limite=10').then((r) => r.json()),
+    fetch('/api/atividade?limite=40').then((r) => r.json()),
+    fetch('/api/ligacoes').then((r) => r.json()),
   ]);
   estado.apps = resApps.apps;
   estado.contagem = resApps.contagem;
   estado.atividade = resAtiv.itens;
+  estado.ligacoes = resLig.ligacoes ?? [];
+}
+
+function podeControlar(app) {
+  return Boolean(app.comando_start) && app.estado !== 'indisponivel' && app.status_instalado !== 'nao_instalado';
+}
+
+function appsFiltrados() {
+  const q = estado.busca.trim().toLowerCase();
+  return estado.apps.filter((a) => {
+    if (estado.filtro === 'online' && a.estado !== 'online') return false;
+    if (estado.filtro === 'offline' && a.estado !== 'offline') return false;
+    if (estado.filtro === 'atencao' && a.estado !== 'erro' && a.estado !== 'indisponivel') return false;
+    if (!q) return true;
+    return [a.nome, a.slug, a.stack, a.descricao].join(' ').toLowerCase().includes(q);
+  });
 }
 
 // ------------------------------------------------------------
@@ -39,14 +56,11 @@ const badge = (est) =>
 
 function cardApp(app) {
   const instalado = app.status_instalado !== 'nao_instalado';
-  const acao =
-    app.estado === 'online'
+  const acao = !podeControlar(app)
+    ? `<span class="vd-appcard__port">${app.estado === 'indisponivel' || !instalado ? 'pasta ausente' : 'sem start'}</span>`
+    : app.estado === 'online'
       ? `<button class="vd-btn vd-btn--sm vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
-      : app.estado === 'indisponivel'
-        ? `<span class="vd-appcard__port">pasta ausente…</span>`
-        : instalado
-          ? `<button class="vd-btn vd-btn--sm vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`
-          : `<span class="vd-appcard__port">não instalado</span>`;
+      : `<button class="vd-btn vd-btn--sm vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`;
 
   return `
     <article class="vd-appcard vd-appcard--${esc(app.estado)} ${instalado ? '' : 'vd-appcard--indisponivel'}" style="--app-color:${esc(app.cor ?? '#cc785c')}" data-slug="${esc(app.slug)}">
@@ -68,6 +82,12 @@ function cardApp(app) {
 // ------------------------------------------------------------
 // Telas
 // ------------------------------------------------------------
+function gradeApps() {
+  const lista = appsFiltrados();
+  if (!lista.length) return '<div class="vd-vazio">Nenhum app com esse filtro.</div>';
+  return lista.map(cardApp).join('');
+}
+
 function telaDashboard() {
   const online = estado.contagem.online ?? 0;
   const atencao = (estado.contagem.erro ?? 0) + (estado.contagem.indisponivel ?? 0);
@@ -83,18 +103,7 @@ function telaDashboard() {
        </div>`
     : '';
 
-  const atividade = estado.atividade?.length
-    ? estado.atividade
-        .map(
-          (i) => `
-        <div class="vd-lista__item">
-          <div class="vd-lista__ico">${esc(i.app_icone ?? '•')}</div>
-          <div class="vd-lista__txt"><strong>${esc(i.app_nome)}</strong> ${esc(i.acao)} · ${i.sucesso ? 'ok' : 'falhou'}</div>
-          <div class="vd-lista__hora">${esc((i.criado_em ?? '').slice(11, 16))}</div>
-        </div>`
-        )
-        .join('')
-    : '<div class="vd-vazio">Nenhuma execução ainda. O histórico aparece aqui quando você iniciar ou parar um app.</div>';
+  const atividade = htmlAtividade((estado.atividade ?? []).slice(0, 8));
 
   return `
     ${alerta}
@@ -115,17 +124,28 @@ function telaDashboard() {
         <div class="vd-metric__sub">${estado.contagem.erro ?? 0} erro · ${estado.contagem.indisponivel ?? 0} indisponível</div>
       </div>
       <div class="vd-metric">
-        <div class="vd-metric__label">Automações</div>
-        <div class="vd-metric__value">0</div>
-        <div class="vd-metric__sub">nenhuma criada</div>
+        <div class="vd-metric__label">Ligações</div>
+        <div class="vd-metric__value">${estado.ligacoes.length}</div>
+        <div class="vd-metric__sub">entre os apps daqui</div>
       </div>
     </div>
 
     <section class="vd-section">
       <div class="vd-section__head">
         <h2 class="vd-section__title">Seus aplicativos</h2>
+        <div class="vd-toolbar">
+          <input id="busca-apps" class="vd-search" type="search" placeholder="Buscar nome ou stack…" value="${esc(estado.busca)}" autocomplete="off">
+          <div class="vd-chips">
+            ${['todos', 'online', 'offline', 'atencao']
+              .map((f) => {
+                const rotulo = { todos: 'Todos', online: 'No ar', offline: 'Parados', atencao: 'Atenção' }[f];
+                return `<button type="button" class="vd-chip ${estado.filtro === f ? 'vd-chip--on' : ''}" data-filtro="${f}">${rotulo}</button>`;
+              })
+              .join('')}
+          </div>
+        </div>
       </div>
-      <div class="vd-appgrid">${estado.apps.map(cardApp).join('')}</div>
+      <div class="vd-appgrid" id="grade-apps">${gradeApps()}</div>
     </section>
 
     <section class="vd-section">
@@ -176,12 +196,13 @@ function telaApp(slug) {
       <div class="vd-apphero__actions">
         ${app.url_local ? `<a class="vd-btn vd-btn--secondary" href="${esc(app.url_local)}" target="_blank" rel="noopener">Abrir app</a>` : ''}
         ${
-          app.estado === 'online'
-            ? `<button class="vd-btn vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
-            : app.estado === 'indisponivel' || app.status_instalado === 'nao_instalado'
-              ? ''
+          !podeControlar(app)
+            ? ''
+            : app.estado === 'online'
+              ? `<button class="vd-btn vd-btn--stop" data-acao="parar" data-slug="${esc(app.slug)}">■ Parar</button>`
               : `<button class="vd-btn vd-btn--start" data-acao="iniciar" data-slug="${esc(app.slug)}">▶ Iniciar</button>`
         }
+        ${app.estado !== 'indisponivel' && app.status_instalado !== 'nao_instalado' ? `<button class="vd-btn vd-btn--secondary" data-acao="pasta" data-slug="${esc(app.slug)}">Abrir pasta</button>` : ''}
       </div>
     </div>
 
@@ -201,7 +222,7 @@ function telaApp(slug) {
         </div>
         <div class="vd-panel">
           <div class="vd-panel__head"><h3 class="vd-panel__title">Integrações com outros apps</h3></div>
-          <div class="vd-panel__body"><div class="vd-vazio">Nenhuma integração configurada ainda.</div></div>
+          <div class="vd-panel__body">${htmlLigacoes(ligacoesDo(app.slug))}</div>
         </div>
       </div>
 
@@ -222,6 +243,40 @@ function telaApp(slug) {
         </div>
       </div>
     </div>`;
+}
+
+function ligacoesDo(slug) {
+  return estado.ligacoes.filter((l) => l.origem === slug || l.destino === slug);
+}
+
+function htmlLigacoes(lista) {
+  if (!lista.length) return '<div class="vd-vazio">Nenhuma ligação cadastrada para este app.</div>';
+  return `<div class="vd-lista">${lista
+    .map(
+      (l) => `
+      <div class="vd-lista__item">
+        <div class="vd-lista__ico">🔗</div>
+        <div class="vd-lista__txt"><strong>${esc(l.nome)}</strong> ${esc(l.origem)} → ${esc(l.destino)}<br><span class="vd-lista__sub">${esc(l.descricao)}</span></div>
+        <div class="vd-lista__hora">${esc(l.tipo)}</div>
+      </div>`
+    )
+    .join('')}</div>`;
+}
+
+function htmlAtividade(itens) {
+  if (!itens?.length) {
+    return '<div class="vd-vazio">Nenhuma execução ainda. O histórico aparece aqui quando você iniciar ou parar um app.</div>';
+  }
+  return itens
+    .map(
+      (i) => `
+        <div class="vd-lista__item">
+          <div class="vd-lista__ico">${esc(i.app_icone ?? '•')}</div>
+          <div class="vd-lista__txt"><strong>${esc(i.app_nome)}</strong> ${esc(i.acao)} · ${i.sucesso ? 'ok' : 'falhou'}${i.mensagem ? `<br><span class="vd-lista__sub">${esc(i.mensagem)}</span>` : ''}</div>
+          <div class="vd-lista__hora">${esc((i.criado_em ?? '').replace('T', ' ').slice(0, 16))}</div>
+        </div>`
+    )
+    .join('');
 }
 
 function telaEmBreve(titulo, texto) {
@@ -399,16 +454,27 @@ function navegar(rota) {
     $('#titulo').textContent = 'Agente';
     $('#subtitulo').textContent = '· Chat e comandos CLI';
     renderizarTelaAgente();
-  } else {
-    const titulos = {
-      automacoes: ['Automações', 'Regras "quando X acontecer, faça Y". Chega na Fase 3 do plano.'],
-      integracoes: ['Integrações', 'Ligações e redirecionamentos entre os seus apps. Chega depois do MVP.'],
-      logs: ['Logs', 'Auditoria completa de execuções e ações do agente. Chega na Fase 3.'],
-    };
-    const [titulo, texto] = titulos[rota] ?? ['—', ''];
-    $('#titulo').textContent = titulo;
+  } else if (rota === 'integracoes') {
+    $('#titulo').textContent = 'Integrações';
+    $('#subtitulo').textContent = `· ${estado.ligacoes.length} ligações`;
+    $('#conteudo').innerHTML = `
+      <p class="vd-lead">Quem inicia quem, nesta máquina. O arquivo é <code>server/ligacoes.json</code>.</p>
+      ${htmlLigacoes(estado.ligacoes)}`;
+  } else if (rota === 'logs') {
+    $('#titulo').textContent = 'Logs';
+    $('#subtitulo').textContent = '· execuções registradas';
+    $('#conteudo').innerHTML = `<div class="vd-lista">${htmlAtividade(estado.atividade)}</div>`;
+  } else if (rota === 'automacoes') {
+    $('#titulo').textContent = 'Automações';
     $('#subtitulo').textContent = '';
-    $('#conteudo').innerHTML = telaEmBreve(titulo, texto);
+    $('#conteudo').innerHTML = telaEmBreve(
+      'Automações',
+      'Regras "quando X acontecer, faça Y" ainda não rodam. As ligações atuais estão em Integrações.'
+    );
+  } else {
+    $('#titulo').textContent = '—';
+    $('#subtitulo').textContent = '';
+    $('#conteudo').innerHTML = telaEmBreve('—', '');
   }
 }
 
@@ -452,6 +518,15 @@ document.addEventListener('click', (ev) => {
     return;
   }
 
+  const chip = ev.target.closest('[data-filtro]');
+  if (chip) {
+    estado.filtro = chip.dataset.filtro;
+    document.querySelectorAll('[data-filtro]').forEach((el) => el.classList.toggle('vd-chip--on', el.dataset.filtro === estado.filtro));
+    const grade = document.getElementById('grade-apps');
+    if (grade) grade.innerHTML = gradeApps();
+    return;
+  }
+
   const item = ev.target.closest('.vd-navitem');
   if (item?.dataset.rota) {
     navegar(item.dataset.rota);
@@ -467,6 +542,13 @@ document.addEventListener('submit', (ev) => {
     const input = $('#chat-texto');
     if (input) enviarMensagem(input.value);
   }
+});
+
+document.addEventListener('input', (ev) => {
+  if (ev.target?.id !== 'busca-apps') return;
+  estado.busca = ev.target.value;
+  const grade = document.getElementById('grade-apps');
+  if (grade) grade.innerHTML = gradeApps();
 });
 
 document.addEventListener('change', (ev) => {

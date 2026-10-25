@@ -45,8 +45,16 @@ function adaptarAoWindows(comando) {
   if (comando.executavel === 'node') {
     return { ...comando, executavel: process.execPath };
   }
-  if (/\.(cmd|bat)$/i.test(comando.executavel)) {
-    return { ...comando, executavel: 'cmd.exe', argumentos: ['/d', '/s', '/c', comando.executavel, ...comando.argumentos] };
+  // No Windows, npm/pnpm/npx/yarn são scripts .cmd. O spawn sem shell
+  // (CreateProcess) não lê PATHEXT, então "npm" sozinho devolve ENOENT.
+  // Os argumentos continuam só os da allowlist — nada digitado na UI entra aqui.
+  const viaCmd = new Set(['npm', 'npx', 'pnpm', 'yarn']);
+  if (viaCmd.has(comando.executavel) || /\.(cmd|bat)$/i.test(comando.executavel)) {
+    return {
+      ...comando,
+      executavel: 'cmd.exe',
+      argumentos: ['/d', '/s', '/c', comando.executavel, ...comando.argumentos],
+    };
   }
   return comando;
 }
@@ -92,7 +100,10 @@ export async function pidsDasPortas(portas) {
   });
 
   // Linha típica: "  TCP    127.0.0.1:4400    0.0.0.0:0    LISTENING       19756"
-  const re = /(?:0\.0\.0\.0|127\.0\.0\.1|\[::\]):(\d+)\s+\S+\s+LISTENING\s+(\d+)/g;
+  // O endereço local pode vir em IPv6: Vite (v6+) resolve "localhost" para ::1
+  // no Windows e escuta SÓ em [::1] — sem aceitar [::1] aqui, um app no ar
+  // aparecia como offline no catálogo.
+  const re = /(?:0\.0\.0\.0|127\.0\.0\.1|\[::1?\]|\[[0-9a-f:.]+\]|\*):(\d+)\s+\S+\s+LISTENING\s+(\d+)/gi;
   for (const m of saida.matchAll(re)) {
     const porta = Number(m[1]);
     const pid = Number(m[2]);
@@ -275,12 +286,24 @@ export async function iniciarApp(app) {
 
 /** Para um app, matando a árvore do processo que escuta na porta. */
 export async function pararApp(app) {
+  // Sem comando de start a vitrine não é dona do processo. A própria vitrine
+  // escuta na 4400: um "Parar" pelo PID da porta mataria este servidor.
+  if (!app.comando_start) {
+    return {
+      ok: false,
+      mensagem: `${app.nome} não tem comando de start. A vitrine não para esse processo.`,
+    };
+  }
+
   const status = await verificarStatus(app);
   if (!status.online) {
     return { ok: false, mensagem: `${app.nome} não está online.` };
   }
 
   const pid = status.pid;
+  if (pid === process.pid) {
+    return { ok: false, mensagem: 'Recusado: esse PID é o próprio servidor da vitrine.' };
+  }
   return new Promise((resolve) => {
     execFile(
       'taskkill.exe',

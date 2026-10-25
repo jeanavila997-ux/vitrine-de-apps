@@ -2,6 +2,7 @@
 // http://127.0.0.1:4400 · catálogo público em https://jeanavila997-ux.github.io/vitrine-de-apps/
 import fs from 'node:fs';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import express from 'express';
 import { config, ROOT, origensPermitidas, validarConfig } from './config.js';
 import {
@@ -114,6 +115,17 @@ app.get('/api/apps/:slug', async (req, res, next) => {
   }
 });
 
+app.get('/api/ligacoes', (req, res, next) => {
+  try {
+    const arquivo = path.join(ROOT, 'server', 'ligacoes.json');
+    const dados = JSON.parse(fs.readFileSync(arquivo, 'utf8'));
+    const ligacoes = Array.isArray(dados.ligacoes) ? dados.ligacoes : [];
+    res.json({ total: ligacoes.length, ligacoes });
+  } catch (erro) {
+    next(erro);
+  }
+});
+
 app.get('/api/atividade', async (req, res, next) => {
   try {
     const limite = Math.min(Number(req.query.limite) || 20, 100);
@@ -142,6 +154,22 @@ app.post('/api/apps/:slug/iniciar', exigirModoLocal, async (req, res, next) => {
 
     const resultado = await executarAcao({ app: app_, acao: 'iniciar', origem: 'ui' });
     res.status(resultado.ok ? 200 : 409).json(resultado);
+  } catch (erro) {
+    next(erro);
+  }
+});
+
+app.post('/api/apps/:slug/pasta', exigirModoLocal, async (req, res, next) => {
+  try {
+    const app_ = await buscarAppPorModo(req.params.slug);
+    if (!app_) return res.status(404).json({ erro: 'App não encontrado' });
+    if (!fs.existsSync(app_.caminho)) {
+      return res.status(409).json({ erro: 'Pasta não encontrada nesta máquina.', caminho: app_.caminho });
+    }
+    // explorer.exe abre a pasta. O caminho vem do catálogo, não do corpo do pedido.
+    const proc = spawn('explorer.exe', [app_.caminho], { detached: true, stdio: 'ignore' });
+    proc.unref();
+    res.json({ ok: true, caminho: app_.caminho });
   } catch (erro) {
     next(erro);
   }

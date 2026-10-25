@@ -15,7 +15,10 @@ function escapeHtml(s) {
 }
 
 function cardHtml(app) {
-  const porta = app.porta ? `<span class="vd-appcard__port">:${app.porta}</span>` : '<span class="vd-appcard__port"></span>';
+  const porta = app.porta ? `<span class="vd-appcard__port">:${app.porta}</span>` : '<span class="vd-appcard__port">sem porta</span>';
+  const codigo = app.repositorio
+    ? `<a class="vd-btn vd-btn--secondary vd-btn--sm" href="${escapeHtml(app.repositorio)}" target="_blank" rel="noopener">Código-fonte</a>`
+    : '<span class="vd-appcard__port">sem repositório</span>';
   return `
   <article class="vd-appcard" style="--app-color:${escapeHtml(app.cor)}">
     <div class="vd-appcard__head">
@@ -27,13 +30,15 @@ function cardHtml(app) {
     </div>
     <p class="vd-appcard__desc">${escapeHtml(app.descricao)}</p>
     <div class="vd-appcard__foot">
-      <a class="vd-btn vd-btn--secondary vd-btn--sm" href="${escapeHtml(app.repositorio)}" target="_blank" rel="noopener">Código-fonte</a>
+      ${codigo}
       ${porta}
     </div>
   </article>`;
 }
 
-const apps = [...registry.apps].sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
+const apps = registry.apps
+  .filter((a) => a.visivel !== 0)
+  .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
 const cards = apps.map(cardHtml).join('\n');
 
 const html = `<!doctype html>

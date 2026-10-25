@@ -45,6 +45,22 @@ test('todo app do registry tem tipo aceito pelo schema', () => {
   }
 });
 
+test('ligacoes.json só cita slugs que existem no registry', () => {
+  const ligacoes = JSON.parse(
+    fs.readFileSync(path.join(ROOT, 'server', 'ligacoes.json'), 'utf8')
+  ).ligacoes;
+  const slugs = new Set(registry.apps.map((a) => a.slug));
+  const tipos = new Set(['redirect', 'api', 'recurso_compartilhado', 'sso']);
+  assert.ok(ligacoes.length > 0, 'catálogo de ligações vazio');
+  for (const lig of ligacoes) {
+    assert.ok(slugs.has(lig.origem), `origem desconhecida: ${lig.origem}`);
+    assert.ok(slugs.has(lig.destino), `destino desconhecido: ${lig.destino}`);
+    assert.notEqual(lig.origem, lig.destino);
+    assert.ok(tipos.has(lig.tipo), `tipo inválido: ${lig.tipo}`);
+    assert.ok(lig.nome && lig.descricao);
+  }
+});
+
 test('todo comando_start do registry existe na allowlist', () => {
   const allowlist = JSON.parse(
     fs.readFileSync(path.join(ROOT, 'server', 'allowed-commands.json'), 'utf8')
