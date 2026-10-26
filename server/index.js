@@ -18,6 +18,14 @@ import {
 } from './db.js';
 import { processarMensagem, historicoChat, listarModelosOllama, limparConversaDify } from './agente.js';
 import { executarAcao, verificarStatus, verificarVarios } from './process-manager.js';
+import {
+  chamarFerramentaMestre,
+  encerrarMestreMcp,
+  ferramentaExigeConfirmacao,
+  listarFerramentasMestre,
+  statusMestreMcp,
+  textoResultadoMcp,
+} from './mestre-mcp-client.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -248,6 +256,59 @@ app.post('/api/chat', async (req, res, next) => {
   }
 });
 
+// ------------------------------------------------------------
+// Ponte MCP com o Mestre do PC
+// ------------------------------------------------------------
+app.get('/api/mestre-mcp/status', async (req, res) => {
+  const status = await statusMestreMcp();
+  res.status(status.ok ? 200 : 503).json(status);
+});
+
+app.get('/api/mestre-mcp/tools', async (req, res, next) => {
+  try {
+    const tools = await listarFerramentasMestre({ atualizar: req.query.atualizar === '1' });
+    res.json({
+      ok: true,
+      total: tools.length,
+      tools: tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description || '',
+        inputSchema: tool.inputSchema || { type: 'object', properties: {} },
+        annotations: tool.annotations || {},
+        exigeConfirmacao: ferramentaExigeConfirmacao(tool),
+      })),
+    });
+  } catch (erro) {
+    next(erro);
+  }
+});
+
+app.post('/api/mestre-mcp/tools/:name', async (req, res, next) => {
+  try {
+    const nome = req.params.name;
+    if (!/^[a-zA-Z0-9_-]{1,128}$/.test(nome)) return res.status(400).json({ erro: 'Nome de ferramenta inválido.' });
+    const tools = await listarFerramentasMestre();
+    const tool = tools.find((item) => item.name === nome);
+    if (!tool) return res.status(404).json({ erro: 'Ferramenta MCP não encontrada.' });
+    if (ferramentaExigeConfirmacao(tool) && req.body?.confirmado !== true) {
+      return res.status(409).json({ erro: 'Esta ferramenta exige confirmação explícita.', exigeConfirmacao: true });
+    }
+    const argumentos = req.body?.argumentos ?? {};
+    if (!argumentos || Array.isArray(argumentos) || typeof argumentos !== 'object') {
+      return res.status(400).json({ erro: 'argumentos deve ser um objeto JSON.' });
+    }
+    const resultado = await chamarFerramentaMestre(nome, argumentos);
+    res.status(resultado.isError ? 502 : 200).json({
+      ok: !resultado.isError,
+      ferramenta: nome,
+      resposta: textoResultadoMcp(resultado),
+      resultado,
+    });
+  } catch (erro) {
+    next(erro);
+  }
+});
+
 app.get('/api/mysql/status', async (req, res) => {
   res.json(await testarMySql());
 });
@@ -373,7 +434,7 @@ if (problemas.length) {
 // todas as interfaces e usa a porta que ela definir.
 const host = config.modo === 'local' ? '127.0.0.1' : '0.0.0.0';
 
-app.listen(config.porta, host, () => {
+const httpServer = app.listen(config.porta, host, () => {
   console.log('');
   console.log('  Vitrine de Apps');
   console.log(`  modo ${config.modo} · http://${host}:${config.porta}`);
@@ -384,3 +445,10 @@ app.listen(config.porta, host, () => {
   }
   console.log('');
 });
+
+for (const sinal of ['SIGINT', 'SIGTERM']) {
+  process.once(sinal, async () => {
+    await encerrarMestreMcp();
+    httpServer.close(() => process.exit(0));
+  });
+}

@@ -98,6 +98,17 @@ export const config = {
     temperature: parseFloat(process.env.OLLAMA_TEMPERATURE ?? '0.7'),
     habilitado: bool(process.env.OLLAMA_ENABLED, true),
   },
+
+  // ---- Ponte MCP com o Mestre do PC ----
+  mestreMcp: {
+    habilitado: bool(process.env.MESTRE_MCP_ENABLED, true),
+    entry: path.resolve(
+      ROOT,
+      process.env.MESTRE_MCP_ENTRY ?? '../Mestre-do-PC-V10/mcp-server/index.js'
+    ),
+    conexaoTimeoutMs: num(process.env.MESTRE_MCP_CONNECT_TIMEOUT_MS, 15000),
+    timeoutMs: num(process.env.MESTRE_MCP_TIMEOUT_MS, 120000),
+  },
 };
 
 /** Origens aceitas em requisições POST — nada de CORS `*`. */

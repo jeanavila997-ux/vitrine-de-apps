@@ -14,7 +14,7 @@ const ESTADOS = {
 };
 
 let estado = { apps: [], contagem: {}, rota: 'dashboard', ligacoes: [], busca: '', filtro: 'todos' };
-let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.getItem('vd_ollama_modelo') || '' };
+let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.getItem('vd_ollama_modelo') || '', mestreMcp: null };
 
 // ------------------------------------------------------------
 // Dados
@@ -291,7 +291,7 @@ function renderizarMensagens() {
     return `<div class="vd-chat__empty">
       <div class="vd-chat__empty-icon">🤖</div>
       <strong>Agente da Vitrine</strong>
-      <p>Pergunte sobre seus apps ou use comandos como <code>listar apps</code>, <code>status mestre-do-pc</code> ou <code>ajuda</code>.</p>
+      <p>Pergunte sobre seus apps ou use <code>mestre status</code>, <code>mestre ferramentas</code> e <code>mestre executar &lt;tool&gt; {}</code>.</p>
     </div>`;
   }
   let html = chat.mensagens
@@ -343,6 +343,9 @@ function telaAgente() {
           </select>
           <button type="button" id="chat-limpar" class="vd-btn vd-btn--sm vd-btn--secondary" title="Limpar conversa">🗑</button>
           <span class="vd-chat__badge">Ollama</span>
+          <button type="button" id="chat-mestre-tools" class="vd-chat__badge ${chat.mestreMcp?.ok ? 'vd-chat__badge--online' : 'vd-chat__badge--offline'}" title="Listar ferramentas MCP do Mestre">
+            Mestre MCP · ${chat.mestreMcp?.ok ? chat.mestreMcp.ferramentas : 'offline'}
+          </button>
         </div>
       </div>
       <div class="vd-chat__messages" id="chat-messages">${renderizarMensagens()}</div>
@@ -366,6 +369,19 @@ async function carregarChat() {
     if (!chat.modelo && dadosModelos.modeloPadrao) {
       chat.modelo = dadosModelos.modeloPadrao;
     }
+
+    // O Mestre pode demorar alguns segundos para iniciar seus bridges. O
+    // status atualiza o selo depois, sem bloquear a abertura da Vitrine.
+    void fetch('/api/mestre-mcp/status')
+      .then((res) => res.json())
+      .then((status) => {
+        chat.mestreMcp = status;
+        if (estado.rota === 'agente') renderizarTelaAgente();
+      })
+      .catch(() => {
+        chat.mestreMcp = { ok: false };
+        if (estado.rota === 'agente') renderizarTelaAgente();
+      });
   } catch (erro) {
     console.error('Falha ao carregar chat:', erro);
   }
@@ -563,6 +579,12 @@ document.addEventListener('click', (ev) => {
   if (btn) {
     ev.preventDefault();
     limparChat();
+  }
+  const mestre = ev.target.closest('#chat-mestre-tools');
+  if (mestre) {
+    ev.preventDefault();
+    const input = $('#chat-texto');
+    if (input) { input.value = 'mestre ferramentas'; input.focus(); }
   }
 });
 
