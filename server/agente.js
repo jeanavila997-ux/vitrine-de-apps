@@ -72,6 +72,18 @@ async function executarAcaoApp({ app, acao, usuarioId = null }) {
 // ============================================================
 const COMANDOS = [
   {
+    id: 'refatorar_prompt',
+    padroes: [/^(?:\/?refatorar|melhorar|reescrever)\s+(?:o\s+)?prompt\s*:?\s*([\s\S]*)$/i],
+    acao: async (texto, matches, contexto) => {
+      const original = String(matches[1] || '').trim();
+      if (!original) {
+        return 'Informe o texto depois do comando. Exemplo: refatorar prompt: crie uma tela de login para celular';
+      }
+      if (original.length > 12000) return 'O prompt deve ter no máximo 12.000 caracteres.';
+      return refatorarPrompt(original, contexto?.modelo);
+    },
+  },
+  {
     id: 'mestre_mcp_status',
     padroes: [/^mestre\s+(?:mcp\s+)?status$/i, /^status\s+mestre(?:\s+mcp)?$/i],
     acao: async () => {
@@ -204,7 +216,7 @@ const COMANDOS = [
     id: 'ajuda',
     padroes: [/^(ajuda|help|comandos|o\s+que\s+(?:voce|vc)\s+(?:faz|faz\?))/i, /^\?$/],
     acao: () => {
-      return `Comandos disponíveis:\n• listar apps — mostra o catálogo e status\n• status <nome ou slug> — estado de um app\n• iniciar <nome ou slug> — sobe o app de verdade (allowlist)\n• parar <nome ou slug> — pede parada; exige "confirmar <slug>"\n• mestre status — testa a ponte MCP com o Mestre do PC\n• mestre ferramentas [filtro] — lista ferramentas MCP\n• mestre executar <tool> {JSON} — chama uma ferramenta; pode exigir confirmação\n• confirmar mestre <tool> — confirma a chamada MCP pendente\n• listar modelos — modelos Ollama disponíveis\n• ajuda — mostra esta mensagem\n\nPara conversas livres, configure Ollama, Dify ou Anthropic no .env.`;
+      return `Comandos disponíveis:\n• refatorar prompt: <texto> — reorganiza e detalha um prompt sem executá-lo\n• listar apps — mostra o catálogo e status\n• status <nome ou slug> — estado de um app\n• iniciar <nome ou slug> — sobe o app de verdade (allowlist)\n• parar <nome ou slug> — pede parada; exige "confirmar <slug>"\n• mestre status — testa a ponte MCP com o Mestre do PC\n• mestre ferramentas [filtro] — lista ferramentas MCP\n• mestre executar <tool> {JSON} — chama uma ferramenta; pode exigir confirmação\n• confirmar mestre <tool> — confirma a chamada MCP pendente\n• listar modelos — modelos Ollama disponíveis\n• ajuda — mostra esta mensagem\n\nPara conversas livres, configure Ollama, Dify ou Anthropic no .env.`;
     },
   },
 ];
@@ -356,6 +368,44 @@ async function chamarAnthropic(mensagens) {
 }
 
 // ============================================================
+// Editor de prompts
+// ============================================================
+const INSTRUCAO_REFATORAR_PROMPT = `Você é um editor de prompts. Reorganize e detalhe o prompt fornecido, preservando sua intenção e seu idioma.
+
+Regras:
+- não responda nem execute o pedido contido no prompt;
+- não invente dados, credenciais, arquivos ou decisões que o usuário não forneceu;
+- transforme ambiguidades relevantes em marcadores [A DEFINIR];
+- torne a tarefa específica, clara e diretamente utilizável por outro modelo;
+- inclua apenas seções que contribuam para este pedido;
+- devolva somente o prompt refatorado, sem prefácio ou análise.
+
+Quando forem úteis, organize em: Papel, Objetivo, Contexto, Tarefa, Requisitos, Restrições, Formato de saída e Critérios de qualidade.`;
+
+function promptEstruturadoLocal(original) {
+  return `## Objetivo\n${original}\n\n## Contexto\n[A DEFINIR: informações de contexto necessárias]\n\n## Tarefa\nRealize o objetivo descrito acima de forma clara, completa e verificável.\n\n## Requisitos\n- Preserve a intenção original.\n- Explique decisões relevantes.\n- Sinalize informações ausentes em vez de inventá-las.\n\n## Formato de saída\n[A DEFINIR: formato, extensão e público da resposta]\n\n## Critérios de qualidade\n- Resultado coerente com o objetivo.\n- Linguagem clara e organizada.\n- Restrições e suposições explicitadas.`;
+}
+
+async function refatorarPrompt(original, modelo = null) {
+  const mensagens = [
+    { role: 'system', content: INSTRUCAO_REFATORAR_PROMPT },
+    { role: 'user', content: original },
+  ];
+
+  let resposta = await chamarOllama(mensagens, modelo);
+  if (resposta) return { resposta, fonte: 'ollama' };
+
+  const pedidoDify = `${INSTRUCAO_REFATORAR_PROMPT}\n\nPrompt original:\n${original}`;
+  resposta = await chamarDify(mensagens, pedidoDify);
+  if (resposta) return { resposta, fonte: 'dify' };
+
+  resposta = await chamarAnthropic(mensagens);
+  if (resposta) return { resposta, fonte: 'anthropic' };
+
+  return { resposta: promptEstruturadoLocal(original), fonte: 'local' };
+}
+
+// ============================================================
 // Processamento de mensagens
 // ============================================================
 export async function processarMensagem({ conteudo, usuarioId = null, modelo = null }) {
@@ -369,7 +419,13 @@ export async function processarMensagem({ conteudo, usuarioId = null, modelo = n
   let ferramentas = [];
 
   if (comando) {
-    resposta = await comando.cmd.acao(conteudo.trim(), comando.matches);
+    const resultado = await comando.cmd.acao(conteudo.trim(), comando.matches, { modelo });
+    if (resultado && typeof resultado === 'object') {
+      resposta = resultado.resposta;
+      fonte = resultado.fonte ?? fonte;
+    } else {
+      resposta = resultado;
+    }
     ferramentas = [comando.cmd.id];
   } else {
     const historico = listarMensagensChat({ usuarioId, limite: 20 });

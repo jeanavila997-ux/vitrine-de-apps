@@ -79,6 +79,7 @@ No chat da Vitrine, use:
 
 | Comando | O que faz |
 |---|---|
+| `refatorar prompt: <texto>` | Reorganiza e detalha o texto para uso como prompt, sem executá-lo |
 | `mestre status` | Testa a conexão e informa quantas ferramentas existem |
 | `mestre ferramentas [filtro]` | Lista ou pesquisa ferramentas do Mestre |
 | `mestre executar <tool> {JSON}` | Executa uma ferramenta MCP |
