@@ -14,7 +14,7 @@ const ESTADOS = {
 };
 
 let estado = { apps: [], contagem: {}, rota: 'dashboard', ligacoes: [], busca: '', filtro: 'todos' };
-let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.getItem('vd_ollama_modelo') || '' };
+let chat = { mensagens: [], enviando: false, modelos: [], modelo: localStorage.getItem('vd_ollama_modelo') || '', mestreMcp: null };
 
 // ------------------------------------------------------------
 // Dados
@@ -291,7 +291,7 @@ function renderizarMensagens() {
     return `<div class="vd-chat__empty">
       <div class="vd-chat__empty-icon">🤖</div>
       <strong>Agente da Vitrine</strong>
-      <p>Pergunte sobre seus apps ou use comandos como <code>listar apps</code>, <code>status mestre-do-pc</code> ou <code>ajuda</code>.</p>
+      <p>Use <code>refatorar prompt: &lt;texto&gt;</code> para reorganizar e detalhar uma ideia, ou acesse as ferramentas do Mestre.</p>
     </div>`;
   }
   let html = chat.mensagens
@@ -343,11 +343,17 @@ function telaAgente() {
           </select>
           <button type="button" id="chat-limpar" class="vd-btn vd-btn--sm vd-btn--secondary" title="Limpar conversa">🗑</button>
           <span class="vd-chat__badge">Ollama</span>
+          <button type="button" id="chat-refatorar-prompt" class="vd-chat__badge" title="Reorganizar e detalhar um prompt">
+            ✨ Refatorar prompt
+          </button>
+          <button type="button" id="chat-mestre-tools" class="vd-chat__badge ${chat.mestreMcp?.ok ? 'vd-chat__badge--online' : 'vd-chat__badge--offline'}" title="Listar ferramentas MCP do Mestre">
+            Mestre MCP · ${chat.mestreMcp?.ok ? chat.mestreMcp.ferramentas : 'offline'}
+          </button>
         </div>
       </div>
       <div class="vd-chat__messages" id="chat-messages">${renderizarMensagens()}</div>
       <form class="vd-chat__input" id="chat-form">
-        <input type="text" id="chat-texto" class="vd-chat__field" placeholder="Digite uma mensagem ou comando…" autocomplete="off" ${chat.enviando ? 'disabled' : ''}>
+        <textarea id="chat-texto" class="vd-chat__field" rows="2" maxlength="16000" placeholder="Digite ou cole um prompt… (Shift+Enter cria uma linha)" ${chat.enviando ? 'disabled' : ''}></textarea>
         <button type="submit" class="vd-btn vd-btn--primary" ${chat.enviando ? 'disabled' : ''}>${chat.enviando ? '…' : 'Enviar'}</button>
       </form>
     </div>`;
@@ -366,6 +372,19 @@ async function carregarChat() {
     if (!chat.modelo && dadosModelos.modeloPadrao) {
       chat.modelo = dadosModelos.modeloPadrao;
     }
+
+    // O Mestre pode demorar alguns segundos para iniciar seus bridges. O
+    // status atualiza o selo depois, sem bloquear a abertura da Vitrine.
+    void fetch('/api/mestre-mcp/status')
+      .then((res) => res.json())
+      .then((status) => {
+        chat.mestreMcp = status;
+        if (estado.rota === 'agente') renderizarTelaAgente();
+      })
+      .catch(() => {
+        chat.mestreMcp = { ok: false };
+        if (estado.rota === 'agente') renderizarTelaAgente();
+      });
   } catch (erro) {
     console.error('Falha ao carregar chat:', erro);
   }
@@ -405,13 +424,14 @@ async function enviarMensagem(texto) {
 }
 
 function renderizarTelaAgente() {
+  const rascunho = $('#chat-texto')?.value ?? '';
   $('#conteudo').innerHTML = telaAgente();
   const msgs = $('#chat-messages');
   if (msgs) msgs.scrollTop = msgs.scrollHeight;
   const input = $('#chat-texto');
   if (input && !chat.enviando) {
     input.focus();
-    input.value = '';
+    input.value = rascunho;
   }
 }
 
@@ -544,6 +564,13 @@ document.addEventListener('submit', (ev) => {
   }
 });
 
+document.addEventListener('keydown', (ev) => {
+  if (ev.target?.id === 'chat-texto' && ev.key === 'Enter' && !ev.shiftKey) {
+    ev.preventDefault();
+    ev.target.form?.requestSubmit();
+  }
+});
+
 document.addEventListener('input', (ev) => {
   if (ev.target?.id !== 'busca-apps') return;
   estado.busca = ev.target.value;
@@ -563,6 +590,18 @@ document.addEventListener('click', (ev) => {
   if (btn) {
     ev.preventDefault();
     limparChat();
+  }
+  const mestre = ev.target.closest('#chat-mestre-tools');
+  if (mestre) {
+    ev.preventDefault();
+    const input = $('#chat-texto');
+    if (input) { input.value = 'mestre ferramentas'; input.focus(); }
+  }
+  const refatorar = ev.target.closest('#chat-refatorar-prompt');
+  if (refatorar) {
+    ev.preventDefault();
+    const input = $('#chat-texto');
+    if (input) { input.value = 'refatorar prompt: '; input.focus(); }
   }
 });
 

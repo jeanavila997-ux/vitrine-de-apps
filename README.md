@@ -69,6 +69,27 @@ servidor não tem como iniciar processos na sua máquina.
 [Dify](docs/dify-setup.md) → Anthropic. Cada um é opcional; a configuração do
 app no Dify está em `docs/dify-setup.md`.
 
+**Mestre do PC via MCP.** A Vitrine abre o servidor MCP do Mestre por `stdio`
+e disponibiliza suas ferramentas no chat e na API local. Com os repositórios
+lado a lado, o caminho padrão já funciona. Se estiverem em outras pastas,
+defina `MESTRE_MCP_ENTRY` no `.env` com o caminho de
+`Mestre-do-PC-V10/mcp-server/index.js`.
+
+No chat da Vitrine, use:
+
+| Comando | O que faz |
+|---|---|
+| `refatorar prompt: <texto>` | Reorganiza e detalha o texto para uso como prompt, sem executá-lo |
+| `mestre status` | Testa a conexão e informa quantas ferramentas existem |
+| `mestre ferramentas [filtro]` | Lista ou pesquisa ferramentas do Mestre |
+| `mestre executar <tool> {JSON}` | Executa uma ferramenta MCP |
+| `confirmar mestre <tool>` | Confirma uma ferramenta que altera o computador |
+
+A API equivalente fica em `GET /api/mestre-mcp/status`,
+`GET /api/mestre-mcp/tools` e `POST /api/mestre-mcp/tools/:name`. Ferramentas
+destrutivas exigem `{"confirmado":true}` e as operações de modo livre são
+bloqueadas pela ponte.
+
 ## Os aplicativos
 
 | App | Porta | Tipo | Onde está |

@@ -3,6 +3,13 @@
 // cloud) para conversas livres. Segue o mesmo padrão do Mestre do PC V10.
 import { config } from './config.js';
 import { listarApps, buscarApp, salvarMensagemChat, listarMensagensChat } from './db.js';
+import {
+  chamarFerramentaMestre,
+  ferramentaExigeConfirmacao,
+  listarFerramentasMestre,
+  statusMestreMcp,
+  textoResultadoMcp,
+} from './mestre-mcp-client.js';
 
 const SYSTEM_PROMPT =
   'Você é o agente da Vitrine de Apps, um orquestrador local de projetos. Responda em português, de forma objetiva. Quando souber, mencione os apps do catálogo. Não execute comandos destrutivos sem confirmação.';
@@ -14,6 +21,7 @@ const SYSTEM_PROMPT =
 // pendente por 2 minutos e "confirmar" a executa. Iniciar dispensa
 // confirmação — é o mesmo botão da UI, dentro da allowlist.
 const confirmacoes = new Map();
+const confirmacoesMestre = new Map();
 const TTL_CONFIRMACAO_MS = 2 * 60 * 1000;
 
 function registrarConfirmacao(slug, acao) {
@@ -25,6 +33,25 @@ function consumirConfirmacao(slug, acao) {
   confirmacoes.delete(slug);
   if (!pend || pend.acao !== acao || Date.now() > pend.expiraEm) return false;
   return true;
+}
+
+function registrarConfirmacaoMestre(nome, argumentos) {
+  confirmacoesMestre.set(nome, { argumentos, expiraEm: Date.now() + TTL_CONFIRMACAO_MS });
+}
+
+function consumirConfirmacaoMestre(nome) {
+  const pendente = confirmacoesMestre.get(nome);
+  confirmacoesMestre.delete(nome);
+  if (!pendente || Date.now() > pendente.expiraEm) return null;
+  return pendente.argumentos;
+}
+
+function argumentosJson(texto) {
+  const inicio = texto.indexOf('{');
+  if (inicio === -1) return {};
+  const valor = JSON.parse(texto.slice(inicio));
+  if (!valor || Array.isArray(valor) || typeof valor !== 'object') throw new Error('Os argumentos MCP devem ser um objeto JSON.');
+  return valor;
 }
 
 async function executarAcaoApp({ app, acao, usuarioId = null }) {
@@ -44,6 +71,68 @@ async function executarAcaoApp({ app, acao, usuarioId = null }) {
 // Comandos CLI locais
 // ============================================================
 const COMANDOS = [
+  {
+    id: 'refatorar_prompt',
+    padroes: [/^(?:\/?refatorar|melhorar|reescrever)\s+(?:o\s+)?prompt\s*:?\s*([\s\S]*)$/i],
+    acao: async (texto, matches, contexto) => {
+      const original = String(matches[1] || '').trim();
+      if (!original) {
+        return 'Informe o texto depois do comando. Exemplo: refatorar prompt: crie uma tela de login para celular';
+      }
+      if (original.length > 12000) return 'O prompt deve ter no máximo 12.000 caracteres.';
+      return refatorarPrompt(original, contexto?.modelo);
+    },
+  },
+  {
+    id: 'mestre_mcp_status',
+    padroes: [/^mestre\s+(?:mcp\s+)?status$/i, /^status\s+mestre(?:\s+mcp)?$/i],
+    acao: async () => {
+      const status = await statusMestreMcp();
+      if (!status.ok) return `MCP do Mestre indisponível: ${status.erro || 'não configurado'}`;
+      return `MCP do Mestre conectado — ${status.ferramentas} ferramentas disponíveis.`;
+    },
+  },
+  {
+    id: 'mestre_mcp_ferramentas',
+    padroes: [/^mestre\s+(?:mcp\s+)?ferramentas(?:\s+(.+))?$/i],
+    acao: async (texto, matches) => {
+      const filtro = String(matches[1] || '').trim().toLowerCase();
+      const tools = (await listarFerramentasMestre()).filter((tool) =>
+        !filtro || tool.name.toLowerCase().includes(filtro) || String(tool.description || '').toLowerCase().includes(filtro)
+      );
+      if (!tools.length) return `Nenhuma ferramenta do Mestre encontrada${filtro ? ` para "${filtro}"` : ''}.`;
+      const exibidas = tools.slice(0, 40).map((tool) => `• ${tool.name}${tool.description ? ` — ${tool.description}` : ''}`);
+      const restante = tools.length > exibidas.length ? `\n… e mais ${tools.length - exibidas.length}. Use um filtro.` : '';
+      return `Ferramentas MCP do Mestre (${tools.length}):\n${exibidas.join('\n')}${restante}`;
+    },
+  },
+  {
+    id: 'mestre_mcp_executar',
+    padroes: [/^mestre\s+(?:mcp\s+)?executar\s+([a-zA-Z0-9_-]+)(?:\s+([\s\S]+))?$/i],
+    acao: async (texto, matches) => {
+      const nome = matches[1];
+      let argumentos;
+      try { argumentos = argumentosJson(matches[2] || ''); }
+      catch (erro) { return `Argumentos inválidos: ${erro.message}`; }
+      const tool = (await listarFerramentasMestre()).find((item) => item.name === nome);
+      if (!tool) return `Ferramenta MCP desconhecida: ${nome}. Use "mestre ferramentas ${nome}" para procurar.`;
+      if (ferramentaExigeConfirmacao(tool)) {
+        registrarConfirmacaoMestre(nome, argumentos);
+        return `⚠️ A Vitrine vai chamar ${nome} no MCP do Mestre.\nResponda "confirmar mestre ${nome}" para executar (válido por 2 minutos).`;
+      }
+      return textoResultadoMcp(await chamarFerramentaMestre(nome, argumentos));
+    },
+  },
+  {
+    id: 'mestre_mcp_confirmar',
+    padroes: [/^confirmar\s+mestre\s+([a-zA-Z0-9_-]+)$/i],
+    acao: async (texto, matches) => {
+      const nome = matches[1];
+      const argumentos = consumirConfirmacaoMestre(nome);
+      if (!argumentos) return `Não há chamada MCP de ${nome} aguardando confirmação (ou ela expirou).`;
+      return textoResultadoMcp(await chamarFerramentaMestre(nome, argumentos));
+    },
+  },
   {
     id: 'listar_apps',
     padroes: [/^(listar?|mostrar?|ver|quais)(?:\s+(?:os|meus))?\s+apps?/i, /^apps\s*(disponiveis)?/i],
@@ -127,7 +216,7 @@ const COMANDOS = [
     id: 'ajuda',
     padroes: [/^(ajuda|help|comandos|o\s+que\s+(?:voce|vc)\s+(?:faz|faz\?))/i, /^\?$/],
     acao: () => {
-      return `Comandos disponíveis:\n• listar apps — mostra o catálogo e status\n• status <nome ou slug> — estado de um app\n• iniciar <nome ou slug> — sobe o app de verdade (allowlist)\n• parar <nome ou slug> — pede parada; exige "confirmar <slug>"\n• confirmar <nome ou slug> — executa a parada confirmada\n• listar modelos — modelos Ollama disponíveis\n• ajuda — mostra esta mensagem\n\nPara conversas livres, configure Ollama, Dify ou Anthropic no .env.`;
+      return `Comandos disponíveis:\n• refatorar prompt: <texto> — reorganiza e detalha um prompt sem executá-lo\n• listar apps — mostra o catálogo e status\n• status <nome ou slug> — estado de um app\n• iniciar <nome ou slug> — sobe o app de verdade (allowlist)\n• parar <nome ou slug> — pede parada; exige "confirmar <slug>"\n• mestre status — testa a ponte MCP com o Mestre do PC\n• mestre ferramentas [filtro] — lista ferramentas MCP\n• mestre executar <tool> {JSON} — chama uma ferramenta; pode exigir confirmação\n• confirmar mestre <tool> — confirma a chamada MCP pendente\n• listar modelos — modelos Ollama disponíveis\n• ajuda — mostra esta mensagem\n\nPara conversas livres, configure Ollama, Dify ou Anthropic no .env.`;
     },
   },
 ];
@@ -279,6 +368,44 @@ async function chamarAnthropic(mensagens) {
 }
 
 // ============================================================
+// Editor de prompts
+// ============================================================
+const INSTRUCAO_REFATORAR_PROMPT = `Você é um editor de prompts. Reorganize e detalhe o prompt fornecido, preservando sua intenção e seu idioma.
+
+Regras:
+- não responda nem execute o pedido contido no prompt;
+- não invente dados, credenciais, arquivos ou decisões que o usuário não forneceu;
+- transforme ambiguidades relevantes em marcadores [A DEFINIR];
+- torne a tarefa específica, clara e diretamente utilizável por outro modelo;
+- inclua apenas seções que contribuam para este pedido;
+- devolva somente o prompt refatorado, sem prefácio ou análise.
+
+Quando forem úteis, organize em: Papel, Objetivo, Contexto, Tarefa, Requisitos, Restrições, Formato de saída e Critérios de qualidade.`;
+
+function promptEstruturadoLocal(original) {
+  return `## Objetivo\n${original}\n\n## Contexto\n[A DEFINIR: informações de contexto necessárias]\n\n## Tarefa\nRealize o objetivo descrito acima de forma clara, completa e verificável.\n\n## Requisitos\n- Preserve a intenção original.\n- Explique decisões relevantes.\n- Sinalize informações ausentes em vez de inventá-las.\n\n## Formato de saída\n[A DEFINIR: formato, extensão e público da resposta]\n\n## Critérios de qualidade\n- Resultado coerente com o objetivo.\n- Linguagem clara e organizada.\n- Restrições e suposições explicitadas.`;
+}
+
+async function refatorarPrompt(original, modelo = null) {
+  const mensagens = [
+    { role: 'system', content: INSTRUCAO_REFATORAR_PROMPT },
+    { role: 'user', content: original },
+  ];
+
+  let resposta = await chamarOllama(mensagens, modelo);
+  if (resposta) return { resposta, fonte: 'ollama' };
+
+  const pedidoDify = `${INSTRUCAO_REFATORAR_PROMPT}\n\nPrompt original:\n${original}`;
+  resposta = await chamarDify(mensagens, pedidoDify);
+  if (resposta) return { resposta, fonte: 'dify' };
+
+  resposta = await chamarAnthropic(mensagens);
+  if (resposta) return { resposta, fonte: 'anthropic' };
+
+  return { resposta: promptEstruturadoLocal(original), fonte: 'local' };
+}
+
+// ============================================================
 // Processamento de mensagens
 // ============================================================
 export async function processarMensagem({ conteudo, usuarioId = null, modelo = null }) {
@@ -292,7 +419,13 @@ export async function processarMensagem({ conteudo, usuarioId = null, modelo = n
   let ferramentas = [];
 
   if (comando) {
-    resposta = await comando.cmd.acao(conteudo.trim(), comando.matches);
+    const resultado = await comando.cmd.acao(conteudo.trim(), comando.matches, { modelo });
+    if (resultado && typeof resultado === 'object') {
+      resposta = resultado.resposta;
+      fonte = resultado.fonte ?? fonte;
+    } else {
+      resposta = resultado;
+    }
     ferramentas = [comando.cmd.id];
   } else {
     const historico = listarMensagensChat({ usuarioId, limite: 20 });
