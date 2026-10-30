@@ -1,5 +1,5 @@
 {
-  "_comentario": "Catálogo dos apps da Vitrine. Alimenta a tabela `apps` via npm run db:seed. Re-escrito em 23/10/2026 para a máquina atual (Acer Nitro 5, usuário C:\\Users\\Jean) — o catálogo anterior apontava para a máquina antiga (C:\\Users\\Jeanc e drive F:) e ficava tudo 'indisponivel'. Os apps da máquina antiga continuam listados abaixo com ativo=0/visivel=0 para preservar o histórico e voltarem fácil quando re-instalados.",
+  "_comentario": "Catálogo dos apps da Vitrine. Alimenta a tabela `apps` via npm run db:seed. Atualizado 28/10/2026: caminhos canônicos em Projetos\\MeusApps\\ (chat-ia, vitrine-de-apps, agente-obsidian). Apps da máquina antiga (C:\\Users\\Jeanc / drive F:) ficam com ativo=0/visivel=0 para preservar histórico.",
   "apps": [
     {
       "slug": "chat-ia",
@@ -7,7 +7,7 @@
       "descricao": "Chat local com síntese de voz (Edge TTS) — ESM puro, uma dependência, roda em 127.0.0.1.",
       "icone": "💬",
       "cor": "#8b5cf6",
-      "caminho": "C:\\Users\\Jean\\Projetos\\chat-ia",
+      "caminho": "C:\\Users\\Jean\\Projetos\\MeusApps\\chat-ia",
       "repositorio": "https://github.com/jeanavila997-ux/chat-ia",
       "branch": "main",
       "stack": "Node · Express-like http · Edge TTS",
@@ -21,7 +21,7 @@
       "ativo": 1,
       "visivel": 1,
       "ordem": 1,
-      "observacoes": "ESM puro, sem suíte de testes (por escolha do projeto). Escuta em 127.0.0.1:7788. Chave ROUTER_API_KEY fica em env/.env."
+      "observacoes": "ESM puro, sem suíte de testes. Escuta em 127.0.0.1:7788. Atalho: abrir-chat-ia.cmd. Chave ROUTER_API_KEY em env/.env. Caminho antigo Projetos\\chat-ia não existe mais."
     },
     {
       "slug": "mestre-do-pc",
@@ -52,7 +52,7 @@
       "descricao": "Este próprio app: catálogo dos projetos, controle de processos e agente. Sem comando de start pela UI — parar a vitrine pela vitrine é pedir para travar fora do carro.",
       "icone": "🪟",
       "cor": "#cc785c",
-      "caminho": "C:\\Users\\Jean\\Projetos\\ProjetosPessoais\\vitrine-de-apps",
+      "caminho": "C:\\Users\\Jean\\Projetos\\MeusApps\\vitrine-de-apps",
       "repositorio": "https://github.com/jeanavila997-ux/vitrine-de-apps",
       "branch": "main",
       "stack": "Node · Express 5 · better-sqlite3 · MariaDB remoto",
@@ -66,7 +66,7 @@
       "ativo": 1,
       "visivel": 1,
       "ordem": 3,
-      "observacoes": "Catálogo público estático via GitHub Pages (docs/, npm run pages:build). Cópia única em ProjetosPessoais — NÃO há pasta em Projetos/. Iniciar manualmente com iniciar-vitrine.cmd ou npm start."
+      "observacoes": "Catálogo público estático via GitHub Pages (docs/, npm run pages:build). Caminho canônico: Projetos\\MeusApps\\vitrine-de-apps (ProjetosPessoais ficou obsoleto). Iniciar com iniciar-vitrine.cmd ou npm start. Sem comando_start na UI de propósito."
     },
     {
       "slug": "nexo-core",
@@ -96,7 +96,7 @@
       "descricao": "Agente local que conversa com os cofres do Obsidian usando Ollama (qwen2.5-coder:3b-instruct) + mem0.",
       "icone": "🤖",
       "cor": "#14b8a6",
-      "caminho": "C:\\Users\\Jean\\Projetos\\agente-obsidian",
+      "caminho": "C:\\Users\\Jean\\Projetos\\MeusApps\\agente-obsidian",
       "repositorio": null,
       "branch": null,
       "stack": "Node · Ollama · mem0 · Obsidian Local REST",
@@ -110,7 +110,7 @@
       "ativo": 1,
       "visivel": 1,
       "ordem": 5,
-      "observacoes": "Sem git (não é repositório). Ollama local em 127.0.0.1:11434. O modelo qwen3.5:4b foi removido desta máquina — usar qwen2.5-coder:3b-instruct."
+      "observacoes": "Sem git. Ollama em 127.0.0.1:11434. Preferir qwen2.5-coder:3b-instruct (qwen3.5:4b pode existir de novo após repull, mas o coder é o default estável)."
     },
     {
       "slug": "cruzamento-bovinos",
@@ -184,7 +184,7 @@
       "descricao": "E-book de 31 capítulos sobre rotina, com página de vendas e checkout.",
       "icone": "📘",
       "cor": "#22c55e",
-      "caminho": "C:\\Users\\Jean\\Projetos\\rotina-leve-playbook",
+      "caminho": "C:\\Users\\Jean\\Projetos\\MeusApps\\rotina-leve-playbook",
       "repositorio": "https://github.com/jeanavila997-ux/rotina-leve-playbook",
       "branch": "main",
       "stack": "Site estático · checkout Cakto · Meta Pixel",
@@ -195,10 +195,10 @@
       "url_publica": "https://rotinaleve.com.br",
       "banco": null,
       "tem_auth": 0,
-      "ativo": 1,
-      "visivel": 1,
-      "ordem": 6,
-      "observacoes": "Produto à venda: o card público ganha botão Abrir para a página de vendas. Caminho local presumido pelo padrão Projetos/ — se a pasta não existir, o db:seed marca indisponível. Pendente: confirmar funil ponta a ponta (página de vendas, Pixel ligado à Cakto com evento de compra, captura de leads)."
+      "ativo": 0,
+      "visivel": 0,
+      "ordem": 9,
+      "observacoes": "Produto à venda (URL pública). Pasta local ainda NÃO existe nesta máquina (nem em Projetos/ nem em MeusApps/) — por isso ativo=0/visivel=0. Quando clonar, ligue ativo/visivel e rode npm run db:seed."
     },
 
     {

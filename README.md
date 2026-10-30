@@ -94,11 +94,11 @@ bloqueadas pela ponte.
 
 | App | Porta | Tipo | Onde está |
 |---|---|---|---|
-| Chat IA | 7788 | web | `Projetos\chat-ia` |
+| Chat IA | 7788 | web | `Projetos\MeusApps\chat-ia` |
 | Mestre do PC V10 | 7777 | serviço | `Projetos\Mestre-do-PC-V10` |
-| Vitrine (este app) | 4400 | serviço | `ProjetosPessoais\vitrine-de-apps` |
+| Vitrine (este app) | 4400 | serviço | `Projetos\MeusApps\vitrine-de-apps` |
 | Nexo Core | — | serviço | `Projetos\nexo-core` (stdio, sem HTTP) |
-| Agente Obsidian | — | desktop | `Projetos\agente-obsidian` |
+| Agente Obsidian | — | desktop | `Projetos\MeusApps\agente-obsidian` |
 | Cruzamento Bovinos | 5173 | híbrido | `C:\Users\Jean\app-cruzamento-bovinos` |
 | NEXO Lab | 3000 | híbrido | `C:\Users\Jean\nexo-lab` |
 | REA | — | serviço | `C:\Users\Jean\rea` |

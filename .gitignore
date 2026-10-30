@@ -23,8 +23,10 @@ vitrine_deploy*
 deploy/PRIVADO.md
 *.privado.md
 
-# Banco local
+# Banco local (SQLite + sidecars)
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 data/
@@ -34,7 +36,10 @@ data/
 logs/
 npm-debug.log*
 
-# Sistema
+# Sistema / IDE
 .DS_Store
 Thumbs.db
+.idea/
+.vscode/
+*.swp
 VPS_DEPLOY.privado.md
